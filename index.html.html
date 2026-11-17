@@ -1,0 +1,2705 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Motek OS | Executive Business Operations & Sales CRM</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts: Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- Chart.js for Interactive Analytics -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        brand: {
+                            50: '#fef2f2',
+                            100: '#fee2e2',
+                            500: '#e51b24',
+                            600: '#cc151e',
+                            700: '#b91c1c',
+                            900: '#1a1a1a',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .tabular-nums {
+            font-variant-numeric: tabular-nums;
+        }
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #1a1a1a;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #333333;
+            border-radius: 9999px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #e51b24;
+        }
+        /* Print styles for Invoice Preview */
+        @media print {
+            body * {
+                visibility: hidden;
+            }
+            #printable-invoice-area, #printable-invoice-area * {
+                visibility: visible;
+            }
+            #printable-invoice-area {
+                position: fixed;
+                left: 0;
+                top: 0;
+                width: 100%;
+                padding: 24px;
+                background: white;
+            }
+            .no-print {
+                display: none !important;
+            }
+        }
+    </style>
+</head>
+<body class="bg-slate-100 text-slate-800 font-sans antialiased selection:bg-red-100 selection:text-red-700">
+
+    <!-- Toast Notification Container -->
+    <div id="toast-container" class="fixed bottom-5 right-5 z-50 flex flex-col gap-2 pointer-events-none"></div>
+
+    <!-- Main App Layout -->
+    <div class="flex h-screen overflow-hidden">
+
+        <!-- Mobile Sidebar Backdrop -->
+        <div id="sidebar-backdrop" onclick="toggleMobileSidebar()" class="fixed inset-0 bg-slate-900/50 z-20 hidden lg:hidden transition-opacity"></div>
+
+        <!-- Left Sidebar Navigation -->
+        <aside id="sidebar" class="fixed inset-y-0 left-0 z-30 w-64 bg-[#1a1a1a] text-slate-300 flex flex-col transition-transform duration-300 ease-in-out -translate-x-full lg:translate-x-0 lg:static lg:inset-0 border-r border-slate-800">
+            <!-- Logo Header -->
+            <div class="h-16 flex items-center justify-between px-5 border-b border-slate-800/80 bg-[#141414]">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-full bg-white p-0.5 flex items-center justify-center shadow-md overflow-hidden shrink-0 border border-red-500/30">
+                        <!-- Embedded exact Motek Logo image via base64 data URI -->
+                        <img src="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQEASABIAAD/4QBaRXhpZgAATU0AKgAAAAgABAEaAAUAAAABAAAAPgEbAAUAAAABAAAARgEoAAMAAAABAAIAAIdpAAQAAAABAAAATgAAAAAAAA==..." alt="Motek Logo" class="w-full h-full object-cover rounded-full" onerror="this.src='https://placehold.co/100x100/e51b24/ffffff?text=M';">
+                    </div>
+                    <div>
+                        <span class="text-white font-extrabold text-lg tracking-tight block leading-none">MOTEK</span>
+                        <span class="text-[10px] font-semibold uppercase tracking-widest text-red-500">Operating System</span>
+                    </div>
+                </div>
+                <button onclick="toggleMobileSidebar()" class="lg:hidden text-slate-400 hover:text-white p-1">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+
+            <!-- Navigation Links -->
+            <nav class="flex-1 px-4 py-5 space-y-1.5 overflow-y-auto">
+                <button onclick="switchTab('dashboard')" id="nav-dashboard" class="nav-btn w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium transition-all bg-[#e51b24] text-white shadow-sm">
+                    <i data-lucide="compass" class="w-4 h-4"></i>
+                    Command Center
+                </button>
+                <button onclick="switchTab('marketing')" id="nav-marketing" class="nav-btn w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium text-slate-300 hover:bg-slate-800/80 hover:text-white transition-all">
+                    <i data-lucide="megaphone" class="w-4 h-4"></i>
+                    Marketing & Leads
+                </button>
+                <button onclick="switchTab('pipeline')" id="nav-pipeline" class="nav-btn w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium text-slate-300 hover:bg-slate-800/80 hover:text-white transition-all">
+                    <i data-lucide="kanban" class="w-4 h-4"></i>
+                    Sales Pipeline
+                    <span id="badge-pipeline-count" class="ml-auto bg-slate-800 text-slate-300 text-xs py-0.5 px-2 rounded-full tabular-nums">0</span>
+                </button>
+                <button onclick="switchTab('invoicing')" id="nav-invoicing" class="nav-btn w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium text-slate-300 hover:bg-slate-800/80 hover:text-white transition-all">
+                    <i data-lucide="receipt" class="w-4 h-4"></i>
+                    Quotes & Invoicing
+                    <span id="badge-unpaid-count" class="ml-auto bg-amber-500/20 text-amber-300 text-xs py-0.5 px-2 rounded-full tabular-nums">0</span>
+                </button>
+                <button onclick="switchTab('clients')" id="nav-clients" class="nav-btn w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium text-slate-300 hover:bg-slate-800/80 hover:text-white transition-all">
+                    <i data-lucide="users" class="w-4 h-4"></i>
+                    Clients & Expenses
+                </button>
+            </nav>
+
+            <!-- Bottom Global Settings / Backup / Reset -->
+            <div class="p-4 border-t border-slate-800/80 space-y-2.5 bg-[#141414]">
+                <div class="bg-slate-900/90 rounded-xl p-3 border border-slate-800">
+                    <label class="block text-[11px] font-medium text-slate-400 mb-1">Reporting Currency</label>
+                    <select id="global-currency" onchange="changeGlobalCurrency(this.value)" class="w-full bg-[#1a1a1a] border border-slate-700 text-white text-xs rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-red-500">
+                        <option value="ZAR">ZAR (R) - South African Rand</option>
+                        <option value="USD">USD ($) - US Dollar</option>
+                        <option value="EUR">EUR (€) - Euro</option>
+                        <option value="GBP">GBP (£) - British Pound</option>
+                    </select>
+                </div>
+
+                <div class="grid grid-cols-2 gap-1.5">
+                    <button onclick="exportBackupJSON()" class="flex items-center justify-center gap-1.5 text-[11px] font-medium text-slate-300 hover:text-white bg-slate-900 hover:bg-slate-800 py-2 rounded-lg transition-colors border border-slate-800" title="Download JSON Backup">
+                        <i data-lucide="download" class="w-3.5 h-3.5 text-emerald-400"></i>
+                        Backup
+                    </button>
+                    <label class="flex items-center justify-center gap-1.5 text-[11px] font-medium text-slate-300 hover:text-white bg-slate-900 hover:bg-slate-800 py-2 rounded-lg transition-colors cursor-pointer border border-slate-800" title="Restore from JSON Backup">
+                        <i data-lucide="upload" class="w-3.5 h-3.5 text-red-500"></i>
+                        Restore
+                        <input type="file" accept=".json" onchange="importBackupJSON(event)" class="hidden">
+                    </label>
+                </div>
+
+                <div class="flex items-center justify-between pt-1">
+                    <button onclick="openCompanySettingsModal()" class="flex items-center gap-1.5 text-[11px] text-slate-400 hover:text-white transition-colors">
+                        <i data-lucide="settings" class="w-3.5 h-3.5"></i>
+                        Motek Profile
+                    </button>
+                    <button onclick="resetDemoData()" class="flex items-center gap-1 text-[11px] text-slate-400 hover:text-red-400 transition-colors">
+                        <i data-lucide="rotate-ccw" class="w-3 h-3"></i>
+                        Reset
+                    </button>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Content Area -->
+        <div class="flex-1 flex flex-col min-w-0 overflow-hidden">
+
+            <!-- Top Header Bar -->
+            <header class="h-16 bg-white border-b border-slate-200 flex items-center justify-between px-4 sm:px-8 shrink-0 shadow-2xs">
+                <div class="flex items-center gap-3">
+                    <button onclick="toggleMobileSidebar()" class="lg:hidden p-2 rounded-lg text-slate-600 hover:bg-slate-100">
+                        <i data-lucide="menu" class="w-5 h-5"></i>
+                    </button>
+                    <div>
+                        <div class="flex items-center gap-2">
+                            <h1 id="page-title" class="text-lg sm:text-xl font-bold text-slate-900">Motek Command Center</h1>
+                            <span class="hidden md:inline-flex items-center px-2 py-0.5 rounded-md text-[11px] font-semibold bg-red-50 text-red-700 border border-red-200">Live Ops</span>
+                        </div>
+                        <p id="page-subtitle" class="text-xs text-slate-500 hidden sm:block">Welcome back to Motek. Here is your executive briefing and daily execution pulse.</p>
+                    </div>
+                </div>
+
+                <!-- Quick Action Buttons -->
+                <div class="flex items-center gap-2 sm:gap-2.5">
+                    <button onclick="openModal('modal-public-lead-sim')" class="hidden md:flex items-center gap-1.5 bg-slate-100 hover:bg-slate-200/80 text-slate-700 text-xs font-semibold px-3 py-2 rounded-xl transition-colors" title="Simulate a prospect submitting Motek's website inquiry form">
+                        <i data-lucide="globe" class="w-3.5 h-3.5 text-[#e51b24]"></i>
+                        <span>Web Lead Form</span>
+                    </button>
+                    <button onclick="openModal('modal-quick-lead')" class="flex items-center gap-1.5 bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 text-xs sm:text-sm font-medium px-3 py-2 rounded-xl transition-colors shadow-2xs">
+                        <i data-lucide="user-plus" class="w-4 h-4 text-[#e51b24]"></i>
+                        <span class="hidden sm:inline">Capture Lead</span>
+                    </button>
+                    <button onclick="openInvoiceBuilder()" class="flex items-center gap-1.5 bg-[#e51b24] hover:bg-[#cc151e] text-white text-xs sm:text-sm font-medium px-3.5 py-2 rounded-xl transition-colors shadow-sm shadow-red-600/20">
+                        <i data-lucide="plus" class="w-4 h-4"></i>
+                        <span>New Invoice / Quote</span>
+                    </button>
+                </div>
+            </header>
+
+            <!-- Scrollable View Container -->
+            <main class="flex-1 overflow-y-auto p-4 sm:p-8 space-y-6">
+
+                <!-- ==================== 1. COMMAND CENTER (DASHBOARD + MENTOR) ==================== -->
+                <section id="view-dashboard" class="view-section space-y-6">
+
+                    <!-- Executive Business Mentor Diagnostic Banner -->
+                    <div class="bg-gradient-to-r from-[#1a1a1a] via-[#1a1a1a] to-slate-900 rounded-2xl p-5 sm:p-6 text-white shadow-lg border border-slate-800">
+                        <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pb-4 border-b border-slate-800">
+                            <div class="flex items-start gap-3.5">
+                                <div class="w-10 h-10 rounded-xl bg-red-500/20 border border-red-500/40 text-red-400 flex items-center justify-center shrink-0 mt-0.5">
+                                    <i data-lucide="sparkles" class="w-5 h-5"></i>
+                                </div>
+                                <div>
+                                    <div class="flex items-center gap-2">
+                                        <span class="text-xs font-bold uppercase tracking-wider text-red-500">Motek Growth Mentor</span>
+                                        <span class="text-[11px] bg-white/10 text-slate-300 px-2 py-0.5 rounded-full">Real-Time Diagnosis</span>
+                                    </div>
+                                    <h2 id="mentor-headline" class="text-base sm:text-lg font-bold text-white mt-0.5">Analyzing Motek's revenue engine...</h2>
+                                </div>
+                            </div>
+
+                            <!-- Monthly Target Progress Pill -->
+                            <div class="bg-white/5 border border-white/10 rounded-xl p-3.5 lg:w-80 shrink-0">
+                                <div class="flex items-center justify-between text-xs mb-1.5">
+                                    <span class="text-slate-300 font-medium">Monthly Revenue Goal</span>
+                                    <button onclick="editMonthlyTarget()" class="text-red-400 hover:text-white font-semibold underline decoration-dotted flex items-center gap-1 tabular-nums">
+                                        <span id="mentor-target-display">R 250,000</span>
+                                        <i data-lucide="pencil" class="w-3 h-3"></i>
+                                    </button>
+                                </div>
+                                <div class="w-full h-2.5 bg-slate-800 rounded-full overflow-hidden flex">
+                                    <div id="target-bar-paid" class="bg-emerald-500 h-full transition-all duration-500" style="width: 0%"></div>
+                                    <div id="target-bar-weighted" class="bg-red-500/70 h-full transition-all duration-500" style="width: 0%"></div>
+                                </div>
+                                <div class="flex items-center justify-between text-[11px] text-slate-400 mt-1.5 tabular-nums">
+                                    <span><strong id="target-pct-settled" class="text-emerald-400">0%</strong> Settled</span>
+                                    <span>+<strong id="target-pct-weighted" class="text-red-400">0%</strong> Weighted Pipeline</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 3 Dynamic Mentor Action Cards -->
+                        <div id="mentor-insights-grid" class="grid grid-cols-1 md:grid-cols-3 gap-3.5 pt-4">
+                            <!-- Populated dynamically via JS -->
+                        </div>
+                    </div>
+
+                    <!-- KPI Cards Grid -->
+                    <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 sm:gap-6">
+                        <!-- KPI 1: Active Pipeline Value -->
+                        <div class="bg-white rounded-2xl p-5 border border-slate-200/80 shadow-sm hover:shadow-md transition-shadow">
+                            <div class="flex items-center justify-between mb-3">
+                                <span class="text-xs font-semibold uppercase tracking-wider text-slate-500">Active Pipeline</span>
+                                <div class="w-9 h-9 rounded-xl bg-red-50 text-[#e51b24] flex items-center justify-center">
+                                    <i data-lucide="trending-up" class="w-5 h-5"></i>
+                                </div>
+                            </div>
+                            <div id="kpi-pipeline-value" class="text-2xl font-bold text-slate-900 tabular-nums">R 0</div>
+                            <div class="mt-2 flex items-center text-xs text-slate-500 tabular-nums">
+                                <span id="kpi-weighted-pipeline" class="font-semibold text-[#e51b24] mr-1.5">R 0</span> weighted forecast
+                            </div>
+                        </div>
+
+                        <!-- KPI 2: Collected Revenue & Net Profit -->
+                        <div class="bg-white rounded-2xl p-5 border border-slate-200/80 shadow-sm hover:shadow-md transition-shadow">
+                            <div class="flex items-center justify-between mb-3">
+                                <span class="text-xs font-semibold uppercase tracking-wider text-slate-500">Settled Revenue</span>
+                                <div class="w-9 h-9 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center">
+                                    <i data-lucide="wallet" class="w-5 h-5"></i>
+                                </div>
+                            </div>
+                            <div id="kpi-paid-revenue" class="text-2xl font-bold text-slate-900 tabular-nums">R 0</div>
+                            <div class="mt-2 flex items-center justify-between text-xs">
+                                <span id="kpi-paid-count" class="text-emerald-600 font-medium">0 invoices settled</span>
+                                <span id="kpi-net-profit" class="text-slate-500 font-medium tabular-nums">Net: R 0</span>
+                            </div>
+                        </div>
+
+                        <!-- KPI 3: Pending / Overdue Invoices -->
+                        <div class="bg-white rounded-2xl p-5 border border-slate-200/80 shadow-sm hover:shadow-md transition-shadow">
+                            <div class="flex items-center justify-between mb-3">
+                                <span class="text-xs font-semibold uppercase tracking-wider text-slate-500">Accounts Receivable</span>
+                                <div class="w-9 h-9 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center">
+                                    <i data-lucide="clock" class="w-5 h-5"></i>
+                                </div>
+                            </div>
+                            <div id="kpi-pending-revenue" class="text-2xl font-bold text-slate-900 tabular-nums">R 0</div>
+                            <div class="mt-2 flex items-center text-xs text-amber-600 font-medium">
+                                <span id="kpi-overdue-alert">0 overdue invoices</span>
+                            </div>
+                        </div>
+
+                        <!-- KPI 4: Marketing ROI & Avg CPL -->
+                        <div class="bg-white rounded-2xl p-5 border border-slate-200/80 shadow-sm hover:shadow-md transition-shadow">
+                            <div class="flex items-center justify-between mb-3">
+                                <span class="text-xs font-semibold uppercase tracking-wider text-slate-500">Marketing Efficiency</span>
+                                <div class="w-9 h-9 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center">
+                                    <i data-lucide="target" class="w-5 h-5"></i>
+                                </div>
+                            </div>
+                            <div id="kpi-marketing-roi" class="text-2xl font-bold text-slate-900 tabular-nums">0%</div>
+                            <div class="mt-2 flex items-center text-xs text-slate-500 tabular-nums">
+                                Blended CPL: <span id="kpi-avg-cpl" class="font-semibold text-slate-800 ml-1">R 0</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Charts Row -->
+                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                        <!-- Revenue vs Expenses & Invoicing Breakdown Chart -->
+                        <div class="lg:col-span-2 bg-white rounded-2xl p-6 border border-slate-200/80 shadow-sm">
+                            <div class="flex items-center justify-between mb-4">
+                                <div>
+                                    <h3 class="text-base font-bold text-slate-900">Motek Cash Flow & Operating Trajectory</h3>
+                                    <p class="text-xs text-slate-500">Settled Revenue vs. Receivables & Operating Expenses</p>
+                                </div>
+                                <span class="text-xs font-medium bg-red-50 text-[#e51b24] px-2.5 py-1 rounded-lg">2026 YTD</span>
+                            </div>
+                            <div class="h-64 w-full">
+                                <canvas id="revenueChart"></canvas>
+                            </div>
+                        </div>
+
+                        <!-- Pipeline Stage Distribution Chart -->
+                        <div class="bg-white rounded-2xl p-6 border border-slate-200/80 shadow-sm">
+                            <div class="mb-4">
+                                <h3 class="text-base font-bold text-slate-900">Pipeline by Stage</h3>
+                                <p class="text-xs text-slate-500">Deal value distribution across cycle</p>
+                            </div>
+                            <div class="h-64 w-full flex items-center justify-center">
+                                <canvas id="pipelineChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Bottom Grid: Today's Priority Actions & Recent Activity -->
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                        <!-- Today's Priority Actions -->
+                        <div class="bg-white rounded-2xl p-6 border border-slate-200/80 shadow-sm flex flex-col">
+                            <div class="flex items-center justify-between mb-4">
+                                <div>
+                                    <h3 class="text-base font-bold text-slate-900">Today's High-Impact Actions</h3>
+                                    <p class="text-xs text-slate-500">Executive priorities, follow-ups, and cash collection tasks</p>
+                                </div>
+                                <span id="tasks-progress" class="text-xs font-semibold bg-slate-100 text-slate-700 px-2.5 py-1 rounded-full tabular-nums">0/0 Done</span>
+                            </div>
+
+                            <!-- Add Task Input -->
+                            <form onsubmit="addTask(event)" class="flex gap-2 mb-4">
+                                <input type="text" id="new-task-input" placeholder="Add a daily priority (e.g., Call Sipho to close Vanguard deal)..." required
+                                    class="flex-1 text-sm border border-slate-300 rounded-xl px-3.5 py-2 focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-[#e51b24]">
+                                <select id="new-task-priority" class="text-xs border border-slate-300 rounded-xl px-2.5 py-2 bg-slate-50 text-slate-700 focus:outline-none">
+                                    <option value="High">High</option>
+                                    <option value="Medium" selected>Medium</option>
+                                    <option value="Low">Low</option>
+                                </select>
+                                <button type="submit" class="bg-[#e51b24] hover:bg-[#cc151e] text-white px-3.5 py-2 rounded-xl text-sm font-medium transition-colors">
+                                    Add
+                                </button>
+                            </form>
+
+                            <!-- Task List -->
+                            <div id="dashboard-task-list" class="space-y-2.5 flex-1 overflow-y-auto max-h-64 pr-1">
+                                <!-- Populated via JS -->
+                            </div>
+                        </div>
+
+                        <!-- Recent Cross-Module Activity Feed -->
+                        <div class="bg-white rounded-2xl p-6 border border-slate-200/80 shadow-sm flex flex-col">
+                            <div class="flex items-center justify-between mb-4">
+                                <div>
+                                    <h3 class="text-base font-bold text-slate-900">Motek Live Pulse</h3>
+                                    <p class="text-xs text-slate-500">Latest leads, deal movements, quotes, and payments</p>
+                                </div>
+                                <button onclick="switchTab('clients')" class="text-xs font-medium text-[#e51b24] hover:underline">Full Log →</button>
+                            </div>
+                            <div id="dashboard-activity-feed" class="space-y-3.5 flex-1 overflow-y-auto max-h-72 pr-1">
+                                <!-- Populated via JS -->
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- ==================== 2. MARKETING & LEAD CAPTURE ==================== -->
+                <section id="view-marketing" class="view-section hidden space-y-6">
+                    <!-- Top Action Bar -->
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm">
+                        <div>
+                            <h2 class="text-base font-bold text-slate-900">Motek Lead Acquisition & Campaign ROI</h2>
+                            <p class="text-xs text-slate-500">Measure Cost-per-Lead (CPL), attributed pipeline revenue, and capture inbound prospects.</p>
+                        </div>
+                        <div class="flex flex-wrap items-center gap-2.5">
+                            <button onclick="openModal('modal-public-lead-sim')" class="flex items-center gap-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs sm:text-sm font-medium px-3.5 py-2.5 rounded-xl transition-colors">
+                                <i data-lucide="globe" class="w-4 h-4 text-[#e51b24]"></i>
+                                Public Lead Form
+                            </button>
+                            <button onclick="openModal('modal-quick-lead')" class="flex items-center gap-2 bg-red-50 hover:bg-red-100 text-[#e51b24] text-xs sm:text-sm font-medium px-4 py-2.5 rounded-xl transition-colors">
+                                <i data-lucide="user-plus" class="w-4 h-4"></i>
+                                Capture Lead
+                            </button>
+                            <button onclick="openModal('modal-add-campaign')" class="flex items-center gap-2 bg-[#e51b24] hover:bg-[#cc151e] text-white text-xs sm:text-sm font-medium px-4 py-2.5 rounded-xl transition-colors shadow-sm">
+                                <i data-lucide="plus-circle" class="w-4 h-4"></i>
+                                Add Campaign
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Marketing Summary Strip -->
+                    <div class="grid grid-cols-1 sm:grid-cols-4 gap-4">
+                        <div class="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-sm">
+                            <span class="text-xs text-slate-500 font-medium">Total Campaign Spend</span>
+                            <div id="mkt-total-spend" class="text-xl font-bold text-slate-900 mt-1 tabular-nums">R 0</div>
+                        </div>
+                        <div class="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-sm">
+                            <span class="text-xs text-slate-500 font-medium">Total Leads Generated</span>
+                            <div id="mkt-total-leads" class="text-xl font-bold text-[#e51b24] mt-1 tabular-nums">0</div>
+                        </div>
+                        <div class="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-sm">
+                            <span class="text-xs text-slate-500 font-medium">Blended Cost Per Lead (CPL)</span>
+                            <div id="mkt-blended-cpl" class="text-xl font-bold text-slate-900 mt-1 tabular-nums">R 0</div>
+                        </div>
+                        <div class="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-sm">
+                            <span class="text-xs text-slate-500 font-medium">Attributed Pipeline Value</span>
+                            <div id="mkt-attributed-rev" class="text-xl font-bold text-emerald-600 mt-1 tabular-nums">R 0</div>
+                        </div>
+                    </div>
+
+                    <!-- Campaigns Table -->
+                    <div class="bg-white rounded-2xl border border-slate-200/80 shadow-sm overflow-hidden">
+                        <div class="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
+                            <h3 class="font-bold text-slate-900 text-sm">Active & Historical Campaigns</h3>
+                            <span class="text-xs text-slate-400">Tip: Link captured leads to a campaign to track true channel ROAS</span>
+                        </div>
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left border-collapse">
+                                <thead>
+                                    <tr class="bg-slate-50/80 text-slate-500 text-xs uppercase tracking-wider border-b border-slate-200">
+                                        <th class="py-3.5 px-6 font-semibold">Campaign Name</th>
+                                        <th class="py-3.5 px-6 font-semibold">Channel</th>
+                                        <th class="py-3.5 px-6 font-semibold">Spend</th>
+                                        <th class="py-3.5 px-6 font-semibold">Leads</th>
+                                        <th class="py-3.5 px-6 font-semibold">Cost / Lead</th>
+                                        <th class="py-3.5 px-6 font-semibold">Attributed Deals</th>
+                                        <th class="py-3.5 px-6 font-semibold">Status</th>
+                                        <th class="py-3.5 px-6 font-semibold text-right">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="campaigns-table-body" class="divide-y divide-slate-100 text-sm">
+                                    <!-- Populated via JS -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- ==================== 3. SALES PIPELINE (KANBAN & LIST) ==================== -->
+                <section id="view-pipeline" class="view-section hidden space-y-6">
+                    <!-- Pipeline Controls -->
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-4 sm:p-5 rounded-2xl border border-slate-200/80 shadow-sm">
+                        <div class="flex items-center gap-3">
+                            <!-- View Toggle -->
+                            <div class="inline-flex bg-slate-100 p-1 rounded-xl">
+                                <button onclick="setPipelineView('kanban')" id="btn-view-kanban" class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-white text-slate-900 shadow-sm transition-all">
+                                    <i data-lucide="columns" class="w-3.5 h-3.5"></i> Board
+                                </button>
+                                <button onclick="setPipelineView('list')" id="btn-view-list" class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold text-slate-600 hover:text-slate-900 transition-all">
+                                    <i data-lucide="list" class="w-3.5 h-3.5"></i> List
+                                </button>
+                            </div>
+                            <span class="text-xs text-slate-500 hidden md:inline">Drag & drop deals or advance stages. Deals sitting &gt;7 days show an aging alert.</span>
+                        </div>
+
+                        <button onclick="openDealModal()" class="flex items-center justify-center gap-2 bg-[#e51b24] hover:bg-[#cc151e] text-white text-sm font-medium px-4 py-2 rounded-xl transition-colors shadow-sm">
+                            <i data-lucide="plus" class="w-4 h-4"></i>
+                            New Opportunity
+                        </button>
+                    </div>
+
+                    <!-- Kanban Board View -->
+                    <div id="pipeline-kanban-container" class="flex gap-4 overflow-x-auto pb-4 items-start min-h-[540px]">
+                        <!-- Columns generated via JS -->
+                    </div>
+
+                    <!-- List Table View -->
+                    <div id="pipeline-list-container" class="hidden bg-white rounded-2xl border border-slate-200/80 shadow-sm overflow-hidden">
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left border-collapse">
+                                <thead>
+                                    <tr class="bg-slate-50/80 text-slate-500 text-xs uppercase tracking-wider border-b border-slate-200">
+                                        <th class="py-3.5 px-6 font-semibold">Opportunity & Client</th>
+                                        <th class="py-3.5 px-6 font-semibold">Stage</th>
+                                        <th class="py-3.5 px-6 font-semibold">Deal Value</th>
+                                        <th class="py-3.5 px-6 font-semibold">Weighted</th>
+                                        <th class="py-3.5 px-6 font-semibold">Next Action</th>
+                                        <th class="py-3.5 px-6 font-semibold text-right">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="pipeline-list-body" class="divide-y divide-slate-100 text-sm">
+                                    <!-- Populated via JS -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- ==================== 4. QUOTES, INVOICING & BILLING ==================== -->
+                <section id="view-invoicing" class="view-section hidden space-y-6">
+                    <!-- Filter & Create Bar -->
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm">
+                        <div class="flex flex-wrap items-center gap-2">
+                            <button onclick="filterInvoices('All')" class="inv-filter-btn active px-3 py-1.5 rounded-xl text-xs font-semibold bg-[#e51b24] text-white">All</button>
+                            <button onclick="filterInvoices('Quote')" class="inv-filter-btn px-3 py-1.5 rounded-xl text-xs font-semibold bg-slate-100 text-slate-600 hover:bg-slate-200">Quote</button>
+                            <button onclick="filterInvoices('Draft')" class="inv-filter-btn px-3 py-1.5 rounded-xl text-xs font-semibold bg-slate-100 text-slate-600 hover:bg-slate-200">Draft</button>
+                            <button onclick="filterInvoices('Sent')" class="inv-filter-btn px-3 py-1.5 rounded-xl text-xs font-semibold bg-slate-100 text-slate-600 hover:bg-slate-200">Sent</button>
+                            <button onclick="filterInvoices('Paid')" class="inv-filter-btn px-3 py-1.5 rounded-xl text-xs font-semibold bg-slate-100 text-slate-600 hover:bg-slate-200">Paid</button>
+                            <button onclick="filterInvoices('Overdue')" class="inv-filter-btn px-3 py-1.5 rounded-xl text-xs font-semibold bg-slate-100 text-slate-600 hover:bg-slate-200">Overdue</button>
+                        </div>
+
+                        <div class="flex items-center gap-2">
+                            <button onclick="openInvoiceBuilder('Quote')" class="flex items-center justify-center gap-1.5 bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs sm:text-sm font-medium px-3.5 py-2 rounded-xl transition-colors">
+                                <i data-lucide="file-spreadsheet" class="w-4 h-4 text-[#e51b24]"></i>
+                                New Quote
+                            </button>
+                            <button onclick="openInvoiceBuilder('Sent')" class="flex items-center justify-center gap-1.5 bg-[#e51b24] hover:bg-[#cc151e] text-white text-xs sm:text-sm font-medium px-4 py-2 rounded-xl transition-colors shadow-sm">
+                                <i data-lucide="file-plus-2" class="w-4 h-4"></i>
+                                Create Invoice
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Invoices Table -->
+                    <div class="bg-white rounded-2xl border border-slate-200/80 shadow-sm overflow-hidden">
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left border-collapse">
+                                <thead>
+                                    <tr class="bg-slate-50/80 text-slate-500 text-xs uppercase tracking-wider border-b border-slate-200">
+                                        <th class="py-3.5 px-6 font-semibold">Document #</th>
+                                        <th class="py-3.5 px-6 font-semibold">Client</th>
+                                        <th class="py-3.5 px-6 font-semibold">Issue Date</th>
+                                        <th class="py-3.5 px-6 font-semibold">Due / Valid Until</th>
+                                        <th class="py-3.5 px-6 font-semibold">Total Amount</th>
+                                        <th class="py-3.5 px-6 font-semibold">Status</th>
+                                        <th class="py-3.5 px-6 font-semibold text-right">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="invoices-table-body" class="divide-y divide-slate-100 text-sm">
+                                    <!-- Populated via JS -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- ==================== 5. CLIENT DIRECTORY, ACTIVITY & EXPENSES ==================== -->
+                <section id="view-clients" class="view-section hidden space-y-6">
+                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                        <!-- Left 2 Cols: Searchable Client Directory + Operating Expense Ledger -->
+                        <div class="lg:col-span-2 space-y-6">
+                            <!-- Search & Add Client Bar -->
+                            <div class="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-sm flex flex-col sm:flex-row gap-3 justify-between">
+                                <div class="relative flex-1">
+                                    <i data-lucide="search" class="w-4 h-4 text-slate-400 absolute left-3.5 top-3"></i>
+                                    <input type="text" id="client-search-input" oninput="renderClients()" placeholder="Search Motek clients by company, contact, or industry..."
+                                        class="w-full pl-10 pr-4 py-2 text-sm border border-slate-300 rounded-xl focus:outline-none focus:border-[#e51b24]">
+                                </div>
+                                <button onclick="openModal('modal-add-client')" class="flex items-center justify-center gap-2 bg-[#e51b24] hover:bg-[#cc151e] text-white text-sm font-medium px-4 py-2 rounded-xl transition-colors shrink-0">
+                                    <i data-lucide="user-plus" class="w-4 h-4"></i>
+                                    Add Client
+                                </button>
+                            </div>
+
+                            <!-- Client Cards Grid -->
+                            <div id="clients-grid" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <!-- Populated via JS -->
+                            </div>
+
+                            <!-- Motek Operating Expenses Ledger -->
+                            <div class="bg-white rounded-2xl border border-slate-200/80 shadow-sm overflow-hidden">
+                                <div class="p-5 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                                    <div>
+                                        <h3 class="text-base font-bold text-slate-900">Motek Operating Expenses</h3>
+                                        <p class="text-xs text-slate-500">Track overhead, software, and contractor costs to monitor true Net Operating Profit.</p>
+                                    </div>
+                                    <div class="text-right">
+                                        <span class="text-xs text-slate-500">Total Expenses:</span>
+                                        <span id="total-expenses-badge" class="ml-1 text-sm font-bold text-rose-600 tabular-nums">R 0</span>
+                                    </div>
+                                </div>
+
+                                <!-- Quick Expense Form -->
+                                <form onsubmit="handleAddExpense(event)" class="p-4 bg-slate-50/70 border-b border-slate-100 grid grid-cols-1 sm:grid-cols-12 gap-2.5">
+                                    <input type="text" id="exp-desc" required placeholder="Expense description (e.g., AWS Cloud Hosting)" class="sm:col-span-5 text-xs sm:text-sm border border-slate-300 rounded-xl px-3 py-2 bg-white">
+                                    <select id="exp-cat" class="sm:col-span-3 text-xs sm:text-sm border border-slate-300 rounded-xl px-2.5 py-2 bg-white">
+                                        <option value="Software & SaaS">Software & SaaS</option>
+                                        <option value="Contractors">Contractors</option>
+                                        <option value="Operations & Office">Operations & Office</option>
+                                        <option value="Marketing & Events">Marketing & Events</option>
+                                    </select>
+                                    <input type="number" id="exp-amount" required min="1" step="0.01" placeholder="Amount" class="sm:col-span-2 text-xs sm:text-sm border border-slate-300 rounded-xl px-3 py-2 bg-white">
+                                    <button type="submit" class="sm:col-span-2 bg-[#1a1a1a] hover:bg-slate-800 text-white text-xs sm:text-sm font-medium py-2 px-3 rounded-xl transition-colors">
+                                        + Log
+                                    </button>
+                                </form>
+
+                                <div class="overflow-x-auto max-h-60">
+                                    <table class="w-full text-left border-collapse">
+                                        <tbody id="expenses-table-body" class="divide-y divide-slate-100 text-xs sm:text-sm">
+                                            <!-- Populated via JS -->
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Right: Client Interaction & Activity Timeline -->
+                        <div class="bg-white rounded-2xl p-5 border border-slate-200/80 shadow-sm flex flex-col h-fit">
+                            <h3 class="text-base font-bold text-slate-900 mb-1">Log Interaction / Activity</h3>
+                            <p class="text-xs text-slate-500 mb-4">Record calls, emails, or meetings with clients.</p>
+
+                            <form onsubmit="logClientActivity(event)" class="space-y-3 mb-6 pb-6 border-b border-slate-100">
+                                <div>
+                                    <label class="block text-xs font-medium text-slate-700 mb-1">Select Client</label>
+                                    <select id="activity-client-select" required class="w-full text-sm border border-slate-300 rounded-xl px-3 py-2 bg-white focus:outline-none focus:border-[#e51b24]">
+                                        <!-- Populated via JS -->
+                                    </select>
+                                </div>
+                                <div class="grid grid-cols-2 gap-2">
+                                    <div>
+                                        <label class="block text-xs font-medium text-slate-700 mb-1">Type</label>
+                                        <select id="activity-type-select" class="w-full text-sm border border-slate-300 rounded-xl px-3 py-2 bg-white focus:outline-none focus:border-[#e51b24]">
+                                            <option value="Call">📞 Phone Call</option>
+                                            <option value="Email">✉️ Email Sent</option>
+                                            <option value="Meeting">🤝 Meeting</option>
+                                            <option value="Note">📝 Internal Note</option>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label class="block text-xs font-medium text-slate-700 mb-1">Date</label>
+                                        <input type="date" id="activity-date-input" required class="w-full text-sm border border-slate-300 rounded-xl px-3 py-2 focus:outline-none focus:border-[#e51b24]">
+                                    </div>
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-medium text-slate-700 mb-1">Summary / Notes</label>
+                                    <textarea id="activity-note-input" rows="2" required placeholder="Discussed Q4 contract renewal and pricing..."
+                                        class="w-full text-sm border border-slate-300 rounded-xl px-3 py-2 focus:outline-none focus:border-[#e51b24]"></textarea>
+                                </div>
+                                <button type="submit" class="w-full bg-[#1a1a1a] hover:bg-slate-800 text-white text-sm font-medium py-2.5 rounded-xl transition-colors">
+                                    Log Activity
+                                </button>
+                            </form>
+
+                            <h4 class="text-xs font-bold uppercase tracking-wider text-slate-400 mb-3">Interaction Timeline</h4>
+                            <div id="client-activity-timeline" class="space-y-4 max-h-96 overflow-y-auto pr-1">
+                                <!-- Populated via JS -->
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+            </main>
+        </div>
+    </div>
+
+    <!-- ==================== MODALS ==================== -->
+
+    <!-- Modal 1: Quick Capture Lead -->
+    <div id="modal-quick-lead" class="fixed inset-0 bg-slate-900/50 backdrop-blur-xs z-40 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-xl border border-slate-100">
+            <div class="flex items-center justify-between mb-4">
+                <div class="flex items-center gap-2.5">
+                    <div class="w-8 h-8 rounded-lg bg-red-100 text-[#e51b24] flex items-center justify-center">
+                        <i data-lucide="user-plus" class="w-4 h-4"></i>
+                    </div>
+                    <h3 class="text-lg font-bold text-slate-900">Capture New Lead</h3>
+                </div>
+                <button onclick="closeModal('modal-quick-lead')" class="text-slate-400 hover:text-slate-600"><i data-lucide="x" class="w-5 h-5"></i></button>
+            </div>
+            <p class="text-xs text-slate-500 mb-4">Creates a client record, attributes marketing ROI, and places the opportunity in Motek's Sales Pipeline.</p>
+            <form onsubmit="handleCaptureLead(event)" class="space-y-3.5">
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 mb-1">Company / Organization *</label>
+                    <input type="text" id="lead-company" required placeholder="e.g. Horizon Logistics" class="w-full text-sm border border-slate-300 rounded-xl px-3.5 py-2 focus:outline-none focus:border-[#e51b24]">
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 mb-1">Contact Name *</label>
+                        <input type="text" id="lead-contact" required placeholder="Thabo Mokoena" class="w-full text-sm border border-slate-300 rounded-xl px-3.5 py-2 focus:outline-none focus:border-[#e51b24]">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 mb-1">Email Address *</label>
+                        <input type="email" id="lead-email" required placeholder="thabo@horizon.co.za" class="w-full text-sm border border-slate-300 rounded-xl px-3.5 py-2 focus:outline-none focus:border-[#e51b24]">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 mb-1">Opportunity Title *</label>
+                    <input type="text" id="lead-title" required placeholder="e.g. Motek Enterprise Automation Rollout" class="w-full text-sm border border-slate-300 rounded-xl px-3.5 py-2 focus:outline-none focus:border-[#e51b24]">
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 mb-1">Est. Deal Value *</label>
+                        <input type="number" id="lead-value" required min="0" step="100" placeholder="55000" class="w-full text-sm border border-slate-300 rounded-xl px-3.5 py-2 focus:outline-none focus:border-[#e51b24]">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 mb-1">Lead Source Campaign</label>
+                        <select id="lead-campaign" class="w-full text-sm border border-slate-300 rounded-xl px-3 py-2 bg-white focus:outline-none focus:border-[#e51b24]">
+                            <!-- Populated via JS -->
+                        </select>
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 mb-1">Next Action / Discovery Note</label>
+                    <input type="text" id="lead-next-action" placeholder="e.g. Schedule 20-min discovery call" class="w-full text-sm border border-slate-300 rounded-xl px-3.5 py-2 focus:outline-none focus:border-[#e51b24]">
+                </div>
+                <div class="pt-3 flex justify-end gap-2">
+                    <button type="button" onclick="closeModal('modal-quick-lead')" class="px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-100 rounded-xl">Cancel</button>
+                    <button type="submit" class="px-4 py-2 text-sm font-medium bg-[#e51b24] hover:bg-[#cc151e] text-white rounded-xl shadow-sm">Save & Add to Pipeline</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal 1B: Public Web Lead Form Simulator -->
+    <div id="modal-public-lead-sim" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-40 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl max-w-md w-full overflow-hidden shadow-2xl border border-slate-200">
+            <div class="bg-gradient-to-r from-[#1a1a1a] to-slate-900 p-5 text-white flex items-center justify-between">
+                <div>
+                    <span class="text-[10px] font-bold uppercase tracking-widest text-[#e51b24]">Motek Inbound Funnel</span>
+                    <h3 class="text-lg font-bold">Request a Motek Consultation</h3>
+                </div>
+                <button onclick="closeModal('modal-public-lead-sim')" class="text-white/70 hover:text-white"><i data-lucide="x" class="w-5 h-5"></i></button>
+            </div>
+            <form onsubmit="handlePublicWebLead(event)" class="p-6 space-y-3.5">
+                <p class="text-xs text-slate-500">Simulate a client submitting an inquiry on <strong>motek.co.za</strong>. It routes directly into your CRM pipeline.</p>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 mb-1">Your Full Name *</label>
+                    <input type="text" id="web-lead-name" required placeholder="Naledi Khumalo" class="w-full text-sm border border-slate-300 rounded-xl px-3.5 py-2">
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 mb-1">Company *</label>
+                        <input type="text" id="web-lead-company" required placeholder="Ubuntu Freight" class="w-full text-sm border border-slate-300 rounded-xl px-3.5 py-2">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 mb-1">Work Email *</label>
+                        <input type="email" id="web-lead-email" required placeholder="naledi@ubuntufreight.co.za" class="w-full text-sm border border-slate-300 rounded-xl px-3.5 py-2">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 mb-1">What can Motek help you solve? *</label>
+                    <input type="text" id="web-lead-need" required placeholder="Custom Operations & Billing Automation" class="w-full text-sm border border-slate-300 rounded-xl px-3.5 py-2">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 mb-1">Estimated Project Budget</label>
+                    <select id="web-lead-budget" class="w-full text-sm border border-slate-300 rounded-xl px-3 py-2 bg-white">
+                        <option value="25000">R 15,000 – R 35,000</option>
+                        <option value="60000" selected>R 35,000 – R 85,000</option>
+                        <option value="125000">R 85,000 – R 150,000+</option>
+                    </select>
+                </div>
+                <div class="pt-2 flex justify-end gap-2">
+                    <button type="button" onclick="closeModal('modal-public-lead-sim')" class="px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-100 rounded-xl">Close</button>
+                    <button type="submit" class="px-5 py-2 text-sm font-semibold bg-[#e51b24] hover:bg-[#cc151e] text-white rounded-xl shadow-sm">Submit Inquiry</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal 2: Add Marketing Campaign -->
+    <div id="modal-add-campaign" class="fixed inset-0 bg-slate-900/50 backdrop-blur-xs z-40 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-xl border border-slate-100">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-lg font-bold text-slate-900">New Marketing Campaign</h3>
+                <button onclick="closeModal('modal-add-campaign')" class="text-slate-400 hover:text-slate-600"><i data-lucide="x" class="w-5 h-5"></i></button>
+            </div>
+            <form onsubmit="handleAddCampaign(event)" class="space-y-3.5">
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 mb-1">Campaign Name *</label>
+                    <input type="text" id="camp-name" required placeholder="e.g. Motek LinkedIn Executive Outreach" class="w-full text-sm border border-slate-300 rounded-xl px-3.5 py-2 focus:outline-none focus:border-[#e51b24]">
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 mb-1">Channel *</label>
+                        <select id="camp-channel" class="w-full text-sm border border-slate-300 rounded-xl px-3 py-2 bg-white focus:outline-none focus:border-[#e51b24]">
+                            <option value="LinkedIn Ads">LinkedIn Ads</option>
+                            <option value="Google Search">Google Search</option>
+                            <option value="Email Outbound">Email Outbound</option>
+                            <option value="Meta / Social">Meta / Social</option>
+                            <option value="Webinar / Event">Webinar / Event</option>
+                            <option value="Referral Partner">Referral Partner</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 mb-1">Status</label>
+                        <select id="camp-status" class="w-full text-sm border border-slate-300 rounded-xl px-3 py-2 bg-white focus:outline-none focus:border-[#e51b24]">
+                            <option value="Active">Active</option>
+                            <option value="Paused">Paused</option>
+                            <option value="Completed">Completed</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 mb-1">Budget / Spend *</label>
+                        <input type="number" id="camp-budget" required min="0" step="100" placeholder="15000" class="w-full text-sm border border-slate-300 rounded-xl px-3.5 py-2 focus:outline-none focus:border-[#e51b24]">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 mb-1">Initial Leads Generated</label>
+                        <input type="number" id="camp-leads" required min="0" value="0" class="w-full text-sm border border-slate-300 rounded-xl px-3.5 py-2 focus:outline-none focus:border-[#e51b24]">
+                    </div>
+                </div>
+                <div class="pt-3 flex justify-end gap-2">
+                    <button type="button" onclick="closeModal('modal-add-campaign')" class="px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-100 rounded-xl">Cancel</button>
+                    <button type="submit" class="px-4 py-2 text-sm font-medium bg-[#e51b24] hover:bg-[#cc151e] text-white rounded-xl shadow-sm">Launch Campaign</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal 3: Add / Edit Pipeline Deal -->
+    <div id="modal-deal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-xs z-40 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-xl border border-slate-100">
+            <div class="flex items-center justify-between mb-4">
+                <h3 id="modal-deal-title" class="text-lg font-bold text-slate-900">New Sales Opportunity</h3>
+                <button onclick="closeModal('modal-deal')" class="text-slate-400 hover:text-slate-600"><i data-lucide="x" class="w-5 h-5"></i></button>
+            </div>
+            <form onsubmit="handleSaveDeal(event)" class="space-y-3.5">
+                <input type="hidden" id="deal-id">
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 mb-1">Opportunity Title *</label>
+                    <input type="text" id="deal-title" required placeholder="e.g. Cloud Infrastructure Migration" class="w-full text-sm border border-slate-300 rounded-xl px-3.5 py-2 focus:outline-none focus:border-[#e51b24]">
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 mb-1">Client *</label>
+                        <select id="deal-client" required class="w-full text-sm border border-slate-300 rounded-xl px-3 py-2 bg-white focus:outline-none focus:border-[#e51b24]">
+                            <!-- Populated via JS -->
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 mb-1">Source Campaign</label>
+                        <select id="deal-campaign" class="w-full text-sm border border-slate-300 rounded-xl px-3 py-2 bg-white focus:outline-none focus:border-[#e51b24]">
+                            <!-- Populated via JS -->
+                        </select>
+                    </div>
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 mb-1">Deal Value *</label>
+                        <input type="number" id="deal-value" required min="0" step="100" placeholder="75000" class="w-full text-sm border border-slate-300 rounded-xl px-3.5 py-2 focus:outline-none focus:border-[#e51b24]">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 mb-1">Win Probability (%)</label>
+                        <input type="number" id="deal-prob" required min="0" max="100" value="35" class="w-full text-sm border border-slate-300 rounded-xl px-3.5 py-2 focus:outline-none focus:border-[#e51b24]">
+                    </div>
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 mb-1">Pipeline Stage</label>
+                        <select id="deal-stage" class="w-full text-sm border border-slate-300 rounded-xl px-3 py-2 bg-white focus:outline-none focus:border-[#e51b24]">
+                            <option value="New Lead">New Lead</option>
+                            <option value="Qualified">Qualified</option>
+                            <option value="Proposal Sent">Proposal Sent</option>
+                            <option value="Negotiation">Negotiation</option>
+                            <option value="Closed Won">Closed Won</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 mb-1">Days in Stage</label>
+                        <input type="number" id="deal-days" min="0" value="1" class="w-full text-sm border border-slate-300 rounded-xl px-3.5 py-2 focus:outline-none focus:border-[#e51b24]">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 mb-1">Next Step / Action Reminder</label>
+                    <input type="text" id="deal-next-action" placeholder="e.g. Send revised scope & pricing by Thursday" class="w-full text-sm border border-slate-300 rounded-xl px-3.5 py-2 focus:outline-none focus:border-[#e51b24]">
+                </div>
+                <div class="pt-3 flex justify-end gap-2">
+                    <button type="button" onclick="closeModal('modal-deal')" class="px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-100 rounded-xl">Cancel</button>
+                    <button type="submit" class="px-4 py-2 text-sm font-medium bg-[#e51b24] hover:bg-[#cc151e] text-white rounded-xl shadow-sm">Save Opportunity</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal 4: Interactive Invoice & Quote Builder -->
+    <div id="modal-invoice-builder" class="fixed inset-0 bg-slate-900/50 backdrop-blur-xs z-40 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl max-w-2xl w-full p-6 shadow-xl border border-slate-100 max-h-[90vh] overflow-y-auto">
+            <div class="flex items-center justify-between mb-4 pb-3 border-b border-slate-100">
+                <div>
+                    <h3 class="text-lg font-bold text-slate-900">Motek Document Builder</h3>
+                    <p class="text-xs text-slate-500">Generate branded quotes or tax invoices with automatic VAT & multi-currency support.</p>
+                </div>
+                <button onclick="closeModal('modal-invoice-builder')" class="text-slate-400 hover:text-slate-600"><i data-lucide="x" class="w-5 h-5"></i></button>
+            </div>
+
+            <form onsubmit="handleSaveInvoice(event)" class="space-y-4">
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 mb-1">Client *</label>
+                        <select id="inv-client" required class="w-full text-sm border border-slate-300 rounded-xl px-3 py-2 bg-white focus:outline-none focus:border-[#e51b24]">
+                            <!-- Populated via JS -->
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 mb-1">Currency</label>
+                        <select id="inv-currency" onchange="recalculateInvoiceTotal()" class="w-full text-sm border border-slate-300 rounded-xl px-3 py-2 bg-white focus:outline-none focus:border-[#e51b24]">
+                            <option value="ZAR">ZAR (R)</option>
+                            <option value="USD">USD ($)</option>
+                            <option value="EUR">EUR (€)</option>
+                            <option value="GBP">GBP (£)</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 mb-1">Document Status</label>
+                        <select id="inv-status" class="w-full text-sm border border-slate-300 rounded-xl px-3 py-2 bg-white focus:outline-none focus:border-[#e51b24]">
+                            <option value="Quote">Quote (Proposal)</option>
+                            <option value="Draft">Draft Invoice</option>
+                            <option value="Sent" selected>Sent Invoice</option>
+                            <option value="Paid">Paid Invoice</option>
+                            <option value="Overdue">Overdue Invoice</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 mb-1">Issue Date *</label>
+                        <input type="date" id="inv-date" required class="w-full text-sm border border-slate-300 rounded-xl px-3 py-2 focus:outline-none focus:border-[#e51b24]">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 mb-1">Due / Valid Until *</label>
+                        <input type="date" id="inv-due-date" required class="w-full text-sm border border-slate-300 rounded-xl px-3 py-2 focus:outline-none focus:border-[#e51b24]">
+                    </div>
+                    <div class="col-span-2 sm:col-span-1">
+                        <label class="block text-xs font-semibold text-slate-700 mb-1">VAT / Tax (%)</label>
+                        <input type="number" id="inv-tax-rate" value="15" min="0" max="50" step="0.5" oninput="recalculateInvoiceTotal()" class="w-full text-sm border border-slate-300 rounded-xl px-3 py-2 focus:outline-none focus:border-[#e51b24]">
+                    </div>
+                </div>
+
+                <!-- Line Items Section -->
+                <div class="bg-slate-50 p-4 rounded-xl border border-slate-200/80 space-y-3">
+                    <div class="flex items-center justify-between">
+                        <span class="text-xs font-bold uppercase tracking-wider text-slate-600">Line Items</span>
+                        <button type="button" onclick="addInvoiceLineItemRow()" class="text-xs font-semibold text-[#e51b24] hover:underline flex items-center gap-1">
+                            <i data-lucide="plus" class="w-3.5 h-3.5"></i> Add Line Item
+                        </button>
+                    </div>
+                    <div id="invoice-line-items-container" class="space-y-2">
+                        <!-- Dynamic rows inserted here -->
+                    </div>
+                </div>
+
+                <!-- Totals Summary -->
+                <div class="flex flex-col items-end space-y-1 text-sm pt-2 tabular-nums">
+                    <div class="flex justify-between w-56 text-slate-500">
+                        <span>Subtotal:</span>
+                        <span id="inv-preview-subtotal" class="font-medium text-slate-800">R 0.00</span>
+                    </div>
+                    <div class="flex justify-between w-56 text-slate-500">
+                        <span>VAT / Tax (<span id="inv-preview-tax-label">15</span>%):</span>
+                        <span id="inv-preview-tax" class="font-medium text-slate-800">R 0.00</span>
+                    </div>
+                    <div class="flex justify-between w-56 text-base font-bold text-slate-900 pt-1 border-t border-slate-200">
+                        <span>Total Amount:</span>
+                        <span id="inv-preview-total" class="text-[#e51b24]">R 0.00</span>
+                    </div>
+                </div>
+
+                <div class="pt-4 border-t border-slate-100 flex justify-end gap-2">
+                    <button type="button" onclick="closeModal('modal-invoice-builder')" class="px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-100 rounded-xl">Cancel</button>
+                    <button type="submit" class="px-5 py-2 text-sm font-medium bg-[#e51b24] hover:bg-[#cc151e] text-white rounded-xl shadow-sm">Save Document</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal 5: Printable Branded Motek Invoice Preview -->
+    <div id="modal-invoice-preview" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl max-w-2xl w-full shadow-2xl overflow-hidden flex flex-col max-h-[92vh]">
+            <!-- Top Bar (No Print) -->
+            <div class="no-print bg-[#1a1a1a] text-white px-6 py-3.5 flex items-center justify-between">
+                <span class="text-sm font-semibold flex items-center gap-2">
+                    <i data-lucide="file-text" class="w-4 h-4 text-[#e51b24]"></i> MOTEK Official Document Preview
+                </span>
+                <div class="flex items-center gap-2">
+                    <button onclick="openCompanySettingsModal()" class="text-xs bg-slate-800 hover:bg-slate-700 text-slate-200 px-3 py-1.5 rounded-lg transition-colors">
+                        Edit Motek Bank/VAT Details
+                    </button>
+                    <button onclick="window.print()" class="flex items-center gap-1.5 bg-[#e51b24] hover:bg-[#cc151e] text-white text-xs font-medium px-3 py-1.5 rounded-lg transition-colors">
+                        <i data-lucide="printer" class="w-3.5 h-3.5"></i> Print / Save PDF
+                    </button>
+                    <button onclick="closeModal('modal-invoice-preview')" class="text-slate-400 hover:text-white p-1">
+                        <i data-lucide="x" class="w-5 h-5"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Printable Document Body -->
+            <div id="printable-invoice-area" class="p-8 overflow-y-auto bg-white text-slate-800 space-y-6">
+                <!-- Populated dynamically via JS -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal 6: Add New Client -->
+    <div id="modal-add-client" class="fixed inset-0 bg-slate-900/50 backdrop-blur-xs z-40 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-xl border border-slate-100">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-lg font-bold text-slate-900">Add New Motek Client</h3>
+                <button onclick="closeModal('modal-add-client')" class="text-slate-400 hover:text-slate-600"><i data-lucide="x" class="w-5 h-5"></i></button>
+            </div>
+            <form onsubmit="handleAddClient(event)" class="space-y-3.5">
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 mb-1">Company Name *</label>
+                    <input type="text" id="client-company" required placeholder="e.g. Karoo Solar Tech" class="w-full text-sm border border-slate-300 rounded-xl px-3.5 py-2 focus:outline-none focus:border-[#e51b24]">
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 mb-1">Primary Contact *</label>
+                        <input type="text" id="client-contact" required placeholder="Anika van der Merwe" class="w-full text-sm border border-slate-300 rounded-xl px-3.5 py-2 focus:outline-none focus:border-[#e51b24]">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 mb-1">Phone</label>
+                        <input type="text" id="client-phone" placeholder="+27 82 555 0192" class="w-full text-sm border border-slate-300 rounded-xl px-3.5 py-2 focus:outline-none focus:border-[#e51b24]">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 mb-1">Email *</label>
+                    <input type="email" id="client-email" required placeholder="anika@karoosolar.co.za" class="w-full text-sm border border-slate-300 rounded-xl px-3.5 py-2 focus:outline-none focus:border-[#e51b24]">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 mb-1">Industry / Segment</label>
+                    <input type="text" id="client-industry" placeholder="Renewable Energy" class="w-full text-sm border border-slate-300 rounded-xl px-3.5 py-2 focus:outline-none focus:border-[#e51b24]">
+                </div>
+                <div class="pt-3 flex justify-end gap-2">
+                    <button type="button" onclick="closeModal('modal-add-client')" class="px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-100 rounded-xl">Cancel</button>
+                    <button type="submit" class="px-4 py-2 text-sm font-medium bg-[#e51b24] hover:bg-[#cc151e] text-white rounded-xl shadow-sm">Save Client</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal 7: Motek Company Profile & Banking Settings -->
+    <div id="modal-company-settings" class="fixed inset-0 bg-slate-900/50 backdrop-blur-xs z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-xl border border-slate-100">
+            <div class="flex items-center justify-between mb-4">
+                <div>
+                    <h3 class="text-lg font-bold text-slate-900">Motek Company & Invoice Profile</h3>
+                    <p class="text-xs text-slate-500">Appears on all printed Quotes & Tax Invoices.</p>
+                </div>
+                <button onclick="closeModal('modal-company-settings')" class="text-slate-400 hover:text-slate-600"><i data-lucide="x" class="w-5 h-5"></i></button>
+            </div>
+            <form onsubmit="handleSaveCompanySettings(event)" class="space-y-3">
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 mb-1">Registered Entity Name</label>
+                    <input type="text" id="set-company-name" required class="w-full text-sm border border-slate-300 rounded-xl px-3 py-2">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 mb-1">Business Address</label>
+                    <input type="text" id="set-company-address" required class="w-full text-sm border border-slate-300 rounded-xl px-3 py-2">
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 mb-1">VAT / Tax Reg #</label>
+                        <input type="text" id="set-company-vat" class="w-full text-sm border border-slate-300 rounded-xl px-3 py-2">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 mb-1">Billing Email</label>
+                        <input type="email" id="set-company-email" required class="w-full text-sm border border-slate-300 rounded-xl px-3 py-2">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 mb-1">EFT / Banking Details</label>
+                    <input type="text" id="set-company-bank" required class="w-full text-sm border border-slate-300 rounded-xl px-3 py-2">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 mb-1">Monthly Revenue Goal</label>
+                    <input type="number" id="set-monthly-target" required min="1000" step="1000" class="w-full text-sm border border-slate-300 rounded-xl px-3 py-2">
+                </div>
+                <div class="pt-3 flex justify-end gap-2">
+                    <button type="button" onclick="closeModal('modal-company-settings')" class="px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-100 rounded-xl">Cancel</button>
+                    <button type="submit" class="px-4 py-2 text-sm font-medium bg-[#e51b24] hover:bg-[#cc151e] text-white rounded-xl">Save Profile</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ==================== JAVASCRIPT APPLICATION LOGIC ==================== -->
+    <script>
+        const STORAGE_KEY = 'motek_os_state_v2';
+
+        const CURRENCY_SYMBOLS = {
+            ZAR: 'R ',
+            USD: '$',
+            EUR: '€',
+            GBP: '£'
+        };
+
+        const PIPELINE_STAGES = [
+            { id: 'New Lead', prob: 15, color: 'bg-slate-500', badge: 'bg-slate-100 text-slate-700' },
+            { id: 'Qualified', prob: 35, color: 'bg-blue-500', badge: 'bg-blue-50 text-blue-700' },
+            { id: 'Proposal Sent', prob: 60, color: 'bg-red-500', badge: 'bg-red-50 text-red-700' },
+            { id: 'Negotiation', prob: 80, color: 'bg-amber-500', badge: 'bg-amber-50 text-amber-700' },
+            { id: 'Closed Won', prob: 100, color: 'bg-emerald-500', badge: 'bg-emerald-50 text-emerald-700' }
+        ];
+
+        const defaultState = {
+            currency: 'ZAR',
+            monthlyTarget: 250000,
+            companyProfile: {
+                name: 'MOTEK (Pty) Ltd',
+                address: 'Midrand Business Park, Gauteng, 1685, South Africa',
+                vat: '4810293847',
+                email: 'accounts@motek.co.za',
+                bank: 'First National Bank (FNB) • Acc: 62891044321 • Branch: 250655'
+            },
+            pipelineView: 'kanban',
+            invoiceFilter: 'All',
+            campaigns: [
+                { id: 'camp-1', name: 'Motek B2B LinkedIn Executive Outreach', channel: 'LinkedIn Ads', budget: 22000, leads: 34, status: 'Active' },
+                { id: 'camp-2', name: 'High-Intent Search Keywords (SA)', channel: 'Google Search', budget: 16500, leads: 42, status: 'Active' },
+                { id: 'camp-3', name: 'Operations Automation Executive Briefing', channel: 'Webinar / Event', budget: 8500, leads: 28, status: 'Completed' },
+                { id: 'camp-4', name: 'Direct Outbound Sequence - Industrial', channel: 'Email Outbound', budget: 4000, leads: 15, status: 'Active' }
+            ],
+            clients: [
+                { id: 'cli-1', company: 'Vanguard Logistics Group', contact: 'Sipho Ndlovu', email: 's.ndlovu@vanguardlog.co.za', phone: '+27 11 450 8821', industry: 'Supply Chain' },
+                { id: 'cli-2', company: 'Meridian FinTech Partners', contact: 'Claire Botha', email: 'claire@meridianfin.co.za', phone: '+27 21 789 3310', industry: 'Financial Services' },
+                { id: 'cli-3', company: 'Apex Mining Solutions', contact: 'Johan Pretorius', email: 'jpretorius@apexmining.co.za', phone: '+27 13 656 1200', industry: 'Industrial' },
+                { id: 'cli-4', company: 'GreenGrid Renewables', contact: 'Lerato Khumalo', email: 'lerato@greengrid.co.za', phone: '+27 12 348 9901', industry: 'Clean Energy' },
+                { id: 'cli-5', company: 'Nova Retail Holdings', contact: 'David Chen', email: 'dchen@novaretail.com', phone: '+27 83 441 7720', industry: 'E-Commerce' }
+            ],
+            deals: [
+                { id: 'deal-1', title: 'Enterprise ERP & Fleet Integration', clientId: 'cli-1', campaignId: 'camp-1', value: 145000, probability: 80, stage: 'Negotiation', daysInStage: 9, nextAction: 'Sign final MSA redlines with Sipho', invoiced: false },
+                { id: 'deal-2', title: 'Q4 Compliance & Security Audit', clientId: 'cli-2', campaignId: 'camp-2', value: 68000, probability: 100, stage: 'Closed Won', daysInStage: 2, nextAction: 'Kickoff onboarding sprint', invoiced: true },
+                { id: 'deal-3', title: 'Predictive Maintenance Dashboard', clientId: 'cli-3', campaignId: 'camp-1', value: 112000, probability: 60, stage: 'Proposal Sent', daysInStage: 8, nextAction: 'Follow up with Johan on technical scope', invoiced: false },
+                { id: 'deal-4', title: 'Solar Telemetry Portal MVP', clientId: 'cli-4', campaignId: 'camp-3', value: 54000, probability: 35, stage: 'Qualified', daysInStage: 3, nextAction: 'Prepare Motek custom quote', invoiced: false },
+                { id: 'deal-5', title: 'Omnichannel Inventory Sync', clientId: 'cli-5', campaignId: 'camp-2', value: 38000, probability: 15, stage: 'New Lead', daysInStage: 1, nextAction: 'Discovery call booked for tomorrow', invoiced: false },
+                { id: 'deal-6', title: 'Annual Managed Support Retainer', clientId: 'cli-2', campaignId: 'camp-2', value: 84000, probability: 100, stage: 'Closed Won', daysInStage: 1, nextAction: 'Issue retainer invoice', invoiced: false }
+            ],
+            invoices: [
+                {
+                    id: 'MTK-2026-101',
+                    clientId: 'cli-2',
+                    date: '2026-10-15',
+                    dueDate: '2026-11-14',
+                    currency: 'ZAR',
+                    taxRate: 15,
+                    status: 'Paid',
+                    items: [
+                        { desc: 'Motek Q4 Compliance & Security Audit - Phase 1', qty: 1, price: 40000 },
+                        { desc: 'Penetration Testing & Executive Reporting', qty: 1, price: 28000 }
+                    ]
+                },
+                {
+                    id: 'MTK-2026-102',
+                    clientId: 'cli-1',
+                    date: '2026-11-01',
+                    dueDate: '2026-11-30',
+                    currency: 'ZAR',
+                    taxRate: 15,
+                    status: 'Sent',
+                    items: [
+                        { desc: 'Motek Architecture & Discovery Blueprint', qty: 20, price: 1850 }
+                    ]
+                },
+                {
+                    id: 'MTK-2026-103',
+                    clientId: 'cli-3',
+                    date: '2026-10-05',
+                    dueDate: '2026-11-04',
+                    currency: 'ZAR',
+                    taxRate: 15,
+                    status: 'Overdue',
+                    items: [
+                        { desc: 'Industrial IoT Sensor Calibration & Setup', qty: 4, price: 6500 }
+                    ]
+                },
+                {
+                    id: 'MTK-2026-104',
+                    clientId: 'cli-4',
+                    date: '2026-11-16',
+                    dueDate: '2026-12-16',
+                    currency: 'ZAR',
+                    taxRate: 15,
+                    status: 'Quote',
+                    items: [
+                        { desc: 'Solar Telemetry Portal MVP - Sprint 1 & 2', qty: 1, price: 46956.52 }
+                    ]
+                }
+            ],
+            expenses: [
+                { id: 'exp-1', desc: 'Cloud Infrastructure & API Hosting', category: 'Software & SaaS', amount: 6400, date: '2026-11-03' },
+                { id: 'exp-2', desc: 'Specialist Solutions Architect Contractor', category: 'Contractors', amount: 18500, date: '2026-11-10' },
+                { id: 'exp-3', desc: 'CRM, Accounting & Productivity Stack', category: 'Software & SaaS', amount: 3200, date: '2026-11-12' }
+            ],
+            tasks: [
+                { id: 't-1', text: 'Close Vanguard Logistics (R145k) — review final MSA terms with Sipho', priority: 'High', done: false },
+                { id: 't-2', text: 'Collect overdue invoice MTK-2026-103 from Apex Mining Solutions', priority: 'High', done: false },
+                { id: 't-3', text: 'Convert Meridian FinTech Closed Won retainer (R84k) into Invoice', priority: 'High', done: false },
+                { id: 't-4', text: 'Review Google Search CPL performance & scale winning ad group', priority: 'Medium', done: true }
+            ],
+            activities: [
+                { id: 'act-1', clientId: 'cli-1', type: 'Meeting', date: '2026-11-17', note: 'Executive sign-off call on Motek Enterprise ERP rollout. Ready for final negotiation.' },
+                { id: 'act-2', clientId: 'cli-2', type: 'Email', date: '2026-11-15', note: 'Sent confirmation receipt for MTK-2026-101 payment.' },
+                { id: 'act-3', clientId: 'cli-3', type: 'Call', date: '2026-11-12', note: 'Walked Johan through the Predictive Maintenance proposal deck.' },
+                { id: 'act-4', clientId: 'cli-5', type: 'Note', date: '2026-11-10', note: 'Inbound lead captured via Google Search campaign.' }
+            ]
+        };
+
+        let appState = loadState();
+        let revenueChartInstance = null;
+        let pipelineChartInstance = null;
+
+        function loadState() {
+            try {
+                const saved = localStorage.getItem(STORAGE_KEY);
+                if (saved) {
+                    const parsed = JSON.parse(saved);
+                    return { ...JSON.parse(JSON.stringify(defaultState)), ...parsed };
+                }
+            } catch (e) {
+                console.error('Failed to load state', e);
+            }
+            return JSON.parse(JSON.stringify(defaultState));
+        }
+
+        function saveState() {
+            try {
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(appState));
+            } catch (e) {
+                console.error('Failed to save state', e);
+            }
+            refreshAllViews();
+        }
+
+        function resetDemoData() {
+            appState = JSON.parse(JSON.stringify(defaultState));
+            saveState();
+            showToast('Motek demo data restored to defaults', 'info');
+        }
+
+        function exportBackupJSON() {
+            const dataStr = 'data:text/json;charset=utf-8,' + encodeURIComponent(JSON.stringify(appState, null, 2));
+            const dlAnchor = document.createElement('a');
+            dlAnchor.setAttribute('href', dataStr);
+            dlAnchor.setAttribute('download', `motek_ops_backup_${new Date().toISOString().split('T')[0]}.json`);
+            document.body.appendChild(dlAnchor);
+            dlAnchor.click();
+            dlAnchor.remove();
+            showToast('Motek backup downloaded');
+        }
+
+        function importBackupJSON(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const imported = JSON.parse(e.target.result);
+                    if (imported && imported.clients && imported.deals) {
+                        appState = { ...JSON.parse(JSON.stringify(defaultState)), ...imported };
+                        saveState();
+                        showToast('Motek backup restored successfully!');
+                    } else {
+                        showToast('Invalid backup file format', 'warning');
+                    }
+                } catch (err) {
+                    showToast('Could not parse JSON backup file', 'warning');
+                }
+            };
+            reader.readAsText(file);
+            event.target.value = '';
+        }
+
+        function formatMoney(amount, currencyOverride = null) {
+            const curr = currencyOverride || appState.currency || 'ZAR';
+            const sym = CURRENCY_SYMBOLS[curr] || 'R ';
+            return sym + Number(amount || 0).toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+        }
+
+        function formatMoneyExact(amount, currencyOverride = null) {
+            const curr = currencyOverride || appState.currency || 'ZAR';
+            const sym = CURRENCY_SYMBOLS[curr] || 'R ';
+            return sym + Number(amount || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        }
+
+        function getClientById(id) {
+            return appState.clients.find(c => c.id === id) || { company: 'Unknown Client', contact: 'N/A', email: '' };
+        }
+
+        function calcInvoiceTotals(inv) {
+            const subtotal = inv.items.reduce((sum, item) => sum + (Number(item.qty) * Number(item.price)), 0);
+            const tax = subtotal * (Number(inv.taxRate || 0) / 100);
+            return { subtotal, tax, total: subtotal + tax };
+        }
+
+        function showToast(message, type = 'success') {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            const colors = {
+                success: 'bg-[#1a1a1a] text-white border-red-500',
+                info: 'bg-[#e51b24] text-white border-red-300',
+                warning: 'bg-amber-600 text-white border-amber-400'
+            };
+            toast.className = `${colors[type] || colors.success} border-l-4 px-4 py-3 rounded-xl shadow-lg text-xs sm:text-sm font-medium flex items-center gap-2.5 transform transition-all duration-300 translate-y-2 opacity-0`;
+            toast.innerHTML = `<span>${message}</span>`;
+            container.appendChild(toast);
+
+            requestAnimationFrame(() => {
+                toast.classList.remove('translate-y-2', 'opacity-0');
+            });
+
+            setTimeout(() => {
+                toast.classList.add('opacity-0', 'translate-y-2');
+                setTimeout(() => toast.remove(), 300);
+            }, 3200);
+        }
+
+        const TAB_META = {
+            dashboard: { title: 'Motek Command Center', subtitle: 'Welcome back to Motek. Here is your executive briefing and daily execution pulse.' },
+            marketing: { title: 'Marketing & Lead Capture', subtitle: 'Track acquisition spend, campaign ROAS, and capture inbound prospects for Motek.' },
+            pipeline: { title: 'Motek Sales Pipeline', subtitle: 'Move opportunities from initial contact through to Closed Won and Invoicing.' },
+            invoicing: { title: 'Quotes, Invoicing & Cash Flow', subtitle: 'Issue branded Motek quotes & VAT invoices, track receivables, and log payments.' },
+            clients: { title: 'Clients, Activity & Expenses', subtitle: 'Customer Lifetime Value (LTV), interaction logs, and operating expense tracking.' }
+        };
+
+        function switchTab(tabId) {
+            document.querySelectorAll('.view-section').forEach(el => el.classList.add('hidden'));
+            document.getElementById(`view-${tabId}`).classList.remove('hidden');
+
+            document.querySelectorAll('.nav-btn').forEach(btn => {
+                btn.classList.remove('bg-[#e51b24]', 'text-white', 'shadow-sm');
+                btn.classList.add('text-slate-300', 'hover:bg-slate-800/80', 'hover:text-white');
+            });
+            const activeBtn = document.getElementById(`nav-${tabId}`);
+            if (activeBtn) {
+                activeBtn.classList.remove('text-slate-300', 'hover:bg-slate-800/80', 'hover:text-white');
+                activeBtn.classList.add('bg-[#e51b24]', 'text-white', 'shadow-sm');
+            }
+
+            document.getElementById('page-title').textContent = TAB_META[tabId].title;
+            document.getElementById('page-subtitle').textContent = TAB_META[tabId].subtitle;
+
+            const sidebar = document.getElementById('sidebar');
+            if (!sidebar.classList.contains('-translate-x-full') && window.innerWidth < 1024) {
+                toggleMobileSidebar();
+            }
+
+            if (tabId === 'dashboard') {
+                renderCharts();
+            }
+            lucide.createIcons();
+        }
+
+        function toggleMobileSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const backdrop = document.getElementById('sidebar-backdrop');
+            sidebar.classList.toggle('-translate-x-full');
+            backdrop.classList.toggle('hidden');
+        }
+
+        function openModal(modalId) {
+            populateSelectDropdowns();
+            document.getElementById(modalId).classList.remove('hidden');
+            lucide.createIcons();
+        }
+
+        function closeModal(modalId) {
+            document.getElementById(modalId).classList.add('hidden');
+        }
+
+        function changeGlobalCurrency(newCurr) {
+            appState.currency = newCurr;
+            saveState();
+            showToast(`Display currency switched to ${newCurr}`, 'info');
+        }
+
+        function openCompanySettingsModal() {
+            const p = appState.companyProfile;
+            document.getElementById('set-company-name').value = p.name;
+            document.getElementById('set-company-address').value = p.address;
+            document.getElementById('set-company-vat').value = p.vat;
+            document.getElementById('set-company-email').value = p.email;
+            document.getElementById('set-company-bank').value = p.bank;
+            document.getElementById('set-monthly-target').value = appState.monthlyTarget || 250000;
+            openModal('modal-company-settings');
+        }
+
+        function handleSaveCompanySettings(e) {
+            e.preventDefault();
+            appState.companyProfile = {
+                name: document.getElementById('set-company-name').value.trim(),
+                address: document.getElementById('set-company-address').value.trim(),
+                vat: document.getElementById('set-company-vat').value.trim(),
+                email: document.getElementById('set-company-email').value.trim(),
+                bank: document.getElementById('set-company-bank').value.trim()
+            };
+            appState.monthlyTarget = Number(document.getElementById('set-monthly-target').value) || 250000;
+            closeModal('modal-company-settings');
+            saveState();
+            showToast('Motek company profile updated');
+        }
+
+        function editMonthlyTarget() {
+            openCompanySettingsModal();
+            setTimeout(() => document.getElementById('set-monthly-target').focus(), 100);
+        }
+
+        function populateSelectDropdowns() {
+            const clientOptions = appState.clients.map(c => `<option value="${c.id}">${c.company} (${c.contact})</option>`).join('');
+            ['deal-client', 'inv-client', 'activity-client-select'].forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.innerHTML = clientOptions;
+            });
+
+            const campOptions = `<option value="">Direct / Organic</option>` +
+                appState.campaigns.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
+            ['lead-campaign', 'deal-campaign'].forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.innerHTML = campOptions;
+            });
+        }
+
+        function renderMentorBriefing(paidRev, weightedPipelineSum, overdueInvoices, openDeals) {
+            const target = Number(appState.monthlyTarget) || 250000;
+            const settledPct = Math.min(100, Math.round((paidRev / target) * 100));
+            const weightedPct = Math.min(100 - settledPct, Math.round((weightedPipelineSum / target) * 100));
+
+            document.getElementById('mentor-target-display').textContent = formatMoney(target);
+            document.getElementById('target-bar-paid').style.width = `${settledPct}%`;
+            document.getElementById('target-bar-weighted').style.width = `${weightedPct}%`;
+            document.getElementById('target-pct-settled').textContent = `${settledPct}%`;
+            document.getElementById('target-pct-weighted').textContent = `${Math.round((weightedPipelineSum / target) * 100)}%`;
+
+            const insights = [];
+
+            if (overdueInvoices.length > 0) {
+                const overdueSum = overdueInvoices.reduce((s, i) => s + calcInvoiceTotals(i).total, 0);
+                insights.push({
+                    tag: 'Cash Flow Alert',
+                    tagColor: 'text-rose-300 bg-rose-500/20 border-rose-500/30',
+                    title: `${formatMoney(overdueSum)} is overdue across ${overdueInvoices.length} invoice(s)`,
+                    actionText: 'Collect Receivables →',
+                    actionFn: "switchTab('invoicing'); filterInvoices('Overdue');"
+                });
+            } else {
+                const unbilledWon = appState.deals.filter(d => d.stage === 'Closed Won' && !d.invoiced);
+                if (unbilledWon.length > 0) {
+                    const unbilledSum = unbilledWon.reduce((s, d) => s + Number(d.value), 0);
+                    insights.push({
+                        tag: 'Unbilled Revenue',
+                        tagColor: 'text-emerald-300 bg-emerald-500/20 border-emerald-500/30',
+                        title: `${formatMoney(unbilledSum)} in Closed Won deals awaits invoicing`,
+                        actionText: 'Convert to Invoice →',
+                        actionFn: "switchTab('pipeline');"
+                    });
+                } else {
+                    insights.push({
+                        tag: 'Healthy Receivables',
+                        tagColor: 'text-emerald-300 bg-emerald-500/20 border-emerald-500/30',
+                        title: 'Zero overdue invoices. Keep sending quotes fast to accelerate cash.',
+                        actionText: 'Create New Quote →',
+                        actionFn: "openInvoiceBuilder('Quote');"
+                    });
+                }
+            }
+
+            const stalledDeals = openDeals.filter(d => Number(d.daysInStage || 0) >= 7);
+            if (stalledDeals.length > 0) {
+                const topStalled = stalledDeals.sort((a, b) => b.value - a.value)[0];
+                insights.push({
+                    tag: 'Pipeline Bottleneck',
+                    tagColor: 'text-amber-300 bg-amber-500/20 border-amber-500/30',
+                    title: `"${topStalled.title}" (${formatMoney(topStalled.value)}) has sat ${topStalled.daysInStage}d in ${topStalled.stage}`,
+                    actionText: 'Advance Deal →',
+                    actionFn: "switchTab('pipeline');"
+                });
+            } else {
+                insights.push({
+                    tag: 'Pipeline Velocity',
+                    tagColor: 'text-red-300 bg-red-500/20 border-red-500/30',
+                    title: `Pipeline coverage is ${(weightedPipelineSum / Math.max(1, target)).toFixed(1)}x of Motek's monthly target.`,
+                    actionText: 'Capture More Leads →',
+                    actionFn: "openModal('modal-quick-lead');"
+                });
+            }
+
+            let bestCamp = null;
+            let lowestCpl = Infinity;
+            appState.campaigns.forEach(c => {
+                if (c.leads > 0) {
+                    const cpl = c.budget / c.leads;
+                    if (cpl < lowestCpl) {
+                        lowestCpl = cpl;
+                        bestCamp = c;
+                    }
+                }
+            });
+
+            if (bestCamp) {
+                insights.push({
+                    tag: 'Growth Lever',
+                    tagColor: 'text-purple-300 bg-purple-500/20 border-purple-500/30',
+                    title: `${bestCamp.channel} delivers Motek's lowest CPL at ${formatMoney(lowestCpl)}/lead`,
+                    actionText: 'View Marketing ROI →',
+                    actionFn: "switchTab('marketing');"
+                });
+            }
+
+            const gap = Math.max(0, target - (paidRev + weightedPipelineSum));
+            document.getElementById('mentor-headline').textContent = gap > 0
+                ? `Motek needs ${formatMoney(gap)} more in weighted pipeline to hit this month's ${formatMoney(target)} goal.`
+                : `Motek is on track to exceed this month's ${formatMoney(target)} revenue target!`;
+
+            const grid = document.getElementById('mentor-insights-grid');
+            grid.innerHTML = insights.map(item => `
+                <div class="bg-white/5 hover:bg-white/[0.08] border border-white/10 rounded-xl p-3.5 flex flex-col justify-between transition-colors">
+                    <div>
+                        <span class="inline-block text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded border ${item.tagColor}">${item.tag}</span>
+                        <p class="text-xs sm:text-sm font-medium text-slate-100 mt-2 leading-snug">${item.title}</p>
+                    </div>
+                    <button onclick="${item.actionFn}" class="mt-3 text-left text-xs font-semibold text-red-400 hover:text-white transition-colors">
+                        ${item.actionText}
+                    </button>
+                </div>
+            `).join('');
+        }
+
+        function renderDashboard() {
+            const openDeals = appState.deals.filter(d => d.stage !== 'Closed Won');
+            const activePipelineSum = openDeals.reduce((sum, d) => sum + Number(d.value), 0);
+            const weightedPipelineSum = openDeals.reduce((sum, d) => sum + (Number(d.value) * (Number(d.probability) / 100)), 0);
+
+            let paidRev = 0;
+            let paidCount = 0;
+            let pendingRev = 0;
+            let overdueInvoices = [];
+
+            appState.invoices.forEach(inv => {
+                if (inv.status === 'Quote' || inv.status === 'Draft') return;
+                const { total } = calcInvoiceTotals(inv);
+                if (inv.status === 'Paid') {
+                    paidRev += total;
+                    paidCount++;
+                } else if (inv.status === 'Sent' || inv.status === 'Overdue') {
+                    pendingRev += total;
+                    if (inv.status === 'Overdue') overdueInvoices.push(inv);
+                }
+            });
+
+            const totalExpenses = (appState.expenses || []).reduce((s, e) => s + Number(e.amount), 0);
+            const netProfit = paidRev - totalExpenses;
+
+            const totalSpend = appState.campaigns.reduce((s, c) => s + Number(c.budget), 0);
+            const totalLeads = appState.campaigns.reduce((s, c) => s + Number(c.leads), 0);
+            const avgCpl = totalLeads > 0 ? totalSpend / totalLeads : 0;
+            const wonValue = appState.deals.filter(d => d.stage === 'Closed Won').reduce((s, d) => s + Number(d.value), 0);
+            const roi = totalSpend > 0 ? Math.round(((wonValue - totalSpend) / totalSpend) * 100) : 0;
+
+            document.getElementById('kpi-pipeline-value').textContent = formatMoney(activePipelineSum);
+            document.getElementById('kpi-weighted-pipeline').textContent = formatMoney(weightedPipelineSum);
+            document.getElementById('kpi-paid-revenue').textContent = formatMoney(paidRev);
+            document.getElementById('kpi-paid-count').textContent = `${paidCount} invoice${paidCount === 1 ? '' : 's'} settled`;
+            document.getElementById('kpi-net-profit').textContent = `Net: ${formatMoney(netProfit)}`;
+            document.getElementById('kpi-pending-revenue').textContent = formatMoney(pendingRev);
+            document.getElementById('kpi-overdue-alert').textContent = `${overdueInvoices.length} overdue invoice${overdueInvoices.length === 1 ? '' : 's'}`;
+            document.getElementById('kpi-marketing-roi').textContent = `${roi > 0 ? '+' : ''}${roi}%`;
+            document.getElementById('kpi-avg-cpl').textContent = formatMoney(avgCpl);
+
+            document.getElementById('badge-pipeline-count').textContent = openDeals.length;
+            const unpaidTotalCount = appState.invoices.filter(i => i.status === 'Sent' || i.status === 'Overdue').length;
+            document.getElementById('badge-unpaid-count').textContent = unpaidTotalCount;
+
+            renderMentorBriefing(paidRev, weightedPipelineSum, overdueInvoices, openDeals);
+            renderTasks();
+            renderDashboardActivity();
+            renderCharts();
+        }
+
+        function renderTasks() {
+            const listEl = document.getElementById('dashboard-task-list');
+            const doneCount = appState.tasks.filter(t => t.done).length;
+            document.getElementById('tasks-progress').textContent = `${doneCount}/${appState.tasks.length} Done`;
+
+            if (appState.tasks.length === 0) {
+                listEl.innerHTML = `<p class="text-xs text-slate-400 text-center py-6">No priority tasks for today. Motek is all caught up!</p>`;
+                return;
+            }
+
+            const prioColors = {
+                High: 'bg-rose-50 text-rose-700 border-rose-200',
+                Medium: 'bg-amber-50 text-amber-700 border-amber-200',
+                Low: 'bg-slate-100 text-slate-600 border-slate-200'
+            };
+
+            listEl.innerHTML = appState.tasks.map(task => `
+                <div class="flex items-center justify-between p-3 rounded-xl border ${task.done ? 'bg-slate-50/70 border-slate-100' : 'bg-white border-slate-200/80'} group transition-all">
+                    <div class="flex items-center gap-3 min-w-0">
+                        <input type="checkbox" ${task.done ? 'checked' : ''} onchange="toggleTask('${task.id}')"
+                            class="w-4 h-4 rounded text-[#e51b24] focus:ring-red-500 border-slate-300 cursor-pointer">
+                        <span class="text-sm truncate ${task.done ? 'line-through text-slate-400' : 'text-slate-700 font-medium'}">${task.text}</span>
+                    </div>
+                    <div class="flex items-center gap-2 shrink-0 ml-2">
+                        <span class="text-[11px] font-semibold px-2 py-0.5 rounded-md border ${prioColors[task.priority] || prioColors.Medium}">${task.priority}</span>
+                        <button onclick="deleteTask('${task.id}')" class="text-slate-300 hover:text-rose-500 opacity-0 group-hover:opacity-100 transition-opacity">
+                            <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+            lucide.createIcons();
+        }
+
+        function addTask(e) {
+            e.preventDefault();
+            const input = document.getElementById('new-task-input');
+            const prio = document.getElementById('new-task-priority').value;
+            if (!input.value.trim()) return;
+
+            appState.tasks.unshift({
+                id: 't-' + Date.now(),
+                text: input.value.trim(),
+                priority: prio,
+                done: false
+            });
+            input.value = '';
+            saveState();
+            showToast('Priority task added');
+        }
+
+        function toggleTask(id) {
+            const task = appState.tasks.find(t => t.id === id);
+            if (task) {
+                task.done = !task.done;
+                saveState();
+            }
+        }
+
+        function deleteTask(id) {
+            appState.tasks = appState.tasks.filter(t => t.id !== id);
+            saveState();
+        }
+
+        function renderDashboardActivity() {
+            const feedEl = document.getElementById('dashboard-activity-feed');
+            const recent = appState.activities.slice(0, 5);
+            const iconMap = {
+                Meeting: { icon: 'users', bg: 'bg-red-50 text-[#e51b24]' },
+                Email: { icon: 'mail', bg: 'bg-blue-50 text-blue-600' },
+                Call: { icon: 'phone', bg: 'bg-emerald-50 text-emerald-600' },
+                Note: { icon: 'file-text', bg: 'bg-amber-50 text-amber-600' }
+            };
+
+            feedEl.innerHTML = recent.map(act => {
+                const client = getClientById(act.clientId);
+                const meta = iconMap[act.type] || iconMap.Note;
+                return `
+                    <div class="flex items-start gap-3">
+                        <div class="w-8 h-8 rounded-xl ${meta.bg} flex items-center justify-center shrink-0 mt-0.5">
+                            <i data-lucide="${meta.icon}" class="w-4 h-4"></i>
+                        </div>
+                        <div class="min-w-0 flex-1">
+                            <div class="flex items-center justify-between gap-2">
+                                <span class="text-xs font-bold text-slate-900 truncate">${client.company}</span>
+                                <span class="text-[11px] text-slate-400 shrink-0">${act.date}</span>
+                            </div>
+                            <p class="text-xs text-slate-600 mt-0.5 line-clamp-2">${act.note}</p>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+            lucide.createIcons();
+        }
+
+        function renderCharts() {
+            const ctxRev = document.getElementById('revenueChart');
+            const ctxPipe = document.getElementById('pipelineChart');
+            if (!ctxRev || !ctxPipe) return;
+
+            const paidRev = appState.invoices.filter(i => i.status === 'Paid').reduce((s, i) => s + calcInvoiceTotals(i).total, 0);
+            const pendingRev = appState.invoices.filter(i => i.status === 'Sent' || i.status === 'Overdue').reduce((s, i) => s + calcInvoiceTotals(i).total, 0);
+            const totalExpenses = (appState.expenses || []).reduce((s, e) => s + Number(e.amount), 0);
+
+            if (revenueChartInstance) revenueChartInstance.destroy();
+            revenueChartInstance = new Chart(ctxRev, {
+                type: 'bar',
+                data: {
+                    labels: ['Jul', 'Aug', 'Sep', 'Oct', 'Nov (Current)', 'Dec (Forecast)'],
+                    datasets: [
+                        {
+                            label: 'Settled Revenue',
+                            data: [82000, 96000, 110000, 128000, paidRev, 0],
+                            backgroundColor: '#e51b24',
+                            borderRadius: 6
+                        },
+                        {
+                            label: 'Receivables / Forecast',
+                            data: [0, 0, 0, 15000, pendingRev, 175000],
+                            backgroundColor: '#fca5a5',
+                            borderRadius: 6
+                        },
+                        {
+                            label: 'Operating Expenses',
+                            data: [24000, 26000, 25500, 29000, totalExpenses, 28000],
+                            backgroundColor: '#333333',
+                            borderRadius: 6
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { position: 'bottom', labels: { boxWidth: 12, font: { size: 11 } } }
+                    },
+                    scales: {
+                        x: { grid: { display: false } },
+                        y: { border: { display: false } }
+                    }
+                }
+            });
+
+            const stageTotals = PIPELINE_STAGES.map(st =>
+                appState.deals.filter(d => d.stage === st.id).reduce((sum, d) => sum + Number(d.value), 0)
+            );
+
+            if (pipelineChartInstance) pipelineChartInstance.destroy();
+            pipelineChartInstance = new Chart(ctxPipe, {
+                type: 'doughnut',
+                data: {
+                    labels: PIPELINE_STAGES.map(s => s.id),
+                    datasets: [{
+                        data: stageTotals,
+                        backgroundColor: ['#64748b', '#3b82f6', '#e51b24', '#f59e0b', '#10b981'],
+                        borderWidth: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    cutout: '68%',
+                    plugins: {
+                        legend: { position: 'bottom', labels: { boxWidth: 10, font: { size: 11 } } }
+                    }
+                }
+            });
+        }
+
+        function renderMarketing() {
+            const totalSpend = appState.campaigns.reduce((s, c) => s + Number(c.budget), 0);
+            const totalLeads = appState.campaigns.reduce((s, c) => s + Number(c.leads), 0);
+            const blendedCpl = totalLeads > 0 ? totalSpend / totalLeads : 0;
+            const attributedTotal = appState.deals
+                .filter(d => d.campaignId)
+                .reduce((s, d) => s + Number(d.value), 0);
+
+            document.getElementById('mkt-total-spend').textContent = formatMoney(totalSpend);
+            document.getElementById('mkt-total-leads').textContent = totalLeads;
+            document.getElementById('mkt-blended-cpl').textContent = formatMoney(blendedCpl);
+            document.getElementById('mkt-attributed-rev').textContent = formatMoney(attributedTotal);
+
+            const tbody = document.getElementById('campaigns-table-body');
+            tbody.innerHTML = appState.campaigns.map(c => {
+                const cpl = c.leads > 0 ? c.budget / c.leads : 0;
+                const campDealsVal = appState.deals
+                    .filter(d => d.campaignId === c.id)
+                    .reduce((s, d) => s + Number(d.value), 0);
+
+                const statusBadge = c.status === 'Active'
+                    ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                    : c.status === 'Paused'
+                        ? 'bg-amber-50 text-amber-700 border-amber-200'
+                        : 'bg-slate-100 text-slate-600 border-slate-200';
+
+                return `
+                    <tr class="hover:bg-slate-50/80 transition-colors">
+                        <td class="py-3.5 px-6 font-semibold text-slate-900">${c.name}</td>
+                        <td class="py-3.5 px-6">
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-lg text-xs font-medium bg-red-50 text-[#e51b24]">${c.channel}</span>
+                        </td>
+                        <td class="py-3.5 px-6 font-medium text-slate-700 tabular-nums">${formatMoney(c.budget)}</td>
+                        <td class="py-3.5 px-6 tabular-nums">
+                            <div class="flex items-center gap-2">
+                                <span class="font-bold text-slate-900">${c.leads}</span>
+                                <button onclick="incrementCampaignLead('${c.id}')" title="Log +1 Lead" class="text-xs bg-slate-100 hover:bg-red-100 text-slate-600 hover:text-[#e51b24] px-1.5 py-0.5 rounded font-semibold">+1</button>
+                            </div>
+                        </td>
+                        <td class="py-3.5 px-6 text-slate-600 tabular-nums">${formatMoney(cpl)}</td>
+                        <td class="py-3.5 px-6 font-semibold text-emerald-600 tabular-nums">${formatMoney(campDealsVal)}</td>
+                        <td class="py-3.5 px-6">
+                            <span class="px-2.5 py-1 rounded-full text-xs font-semibold border ${statusBadge}">${c.status}</span>
+                        </td>
+                        <td class="py-3.5 px-6 text-right">
+                            <button onclick="deleteCampaign('${c.id}')" class="text-slate-400 hover:text-rose-600 p-1" title="Delete Campaign">
+                                <i data-lucide="trash-2" class="w-4 h-4"></i>
+                            </button>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+            lucide.createIcons();
+        }
+
+        function handleAddCampaign(e) {
+            e.preventDefault();
+            const newCamp = {
+                id: 'camp-' + Date.now(),
+                name: document.getElementById('camp-name').value.trim(),
+                channel: document.getElementById('camp-channel').value,
+                status: document.getElementById('camp-status').value,
+                budget: Number(document.getElementById('camp-budget').value),
+                leads: Number(document.getElementById('camp-leads').value)
+            };
+            appState.campaigns.unshift(newCamp);
+            e.target.reset();
+            closeModal('modal-add-campaign');
+            saveState();
+            showToast(`Campaign "${newCamp.name}" launched!`);
+        }
+
+        function incrementCampaignLead(id) {
+            const camp = appState.campaigns.find(c => c.id === id);
+            if (camp) {
+                camp.leads = Number(camp.leads) + 1;
+                saveState();
+                showToast('+1 lead recorded for ' + camp.name);
+            }
+        }
+
+        function deleteCampaign(id) {
+            appState.campaigns = appState.campaigns.filter(c => c.id !== id);
+            saveState();
+            showToast('Campaign removed', 'info');
+        }
+
+        function createLeadAndOpportunity({ company, contact, email, title, value, campId, nextAction }) {
+            let client = appState.clients.find(c => c.company.toLowerCase() === company.toLowerCase());
+            if (!client) {
+                client = {
+                    id: 'cli-' + Date.now(),
+                    company,
+                    contact,
+                    email,
+                    phone: 'Pending',
+                    industry: 'Inbound Prospect'
+                };
+                appState.clients.unshift(client);
+            }
+
+            if (campId) {
+                const camp = appState.campaigns.find(c => c.id === campId);
+                if (camp) camp.leads = Number(camp.leads) + 1;
+            }
+
+            appState.deals.unshift({
+                id: 'deal-' + Date.now(),
+                title,
+                clientId: client.id,
+                campaignId: campId || '',
+                value,
+                probability: 15,
+                stage: 'New Lead',
+                daysInStage: 0,
+                nextAction: nextAction || 'Conduct discovery call',
+                invoiced: false
+            });
+
+            appState.activities.unshift({
+                id: 'act-' + Date.now(),
+                clientId: client.id,
+                type: 'Note',
+                date: new Date().toISOString().split('T')[0],
+                note: `New lead captured for Motek: "${title}" (${formatMoney(value)}).`
+            });
+        }
+
+        function handleCaptureLead(e) {
+            e.preventDefault();
+            const title = document.getElementById('lead-title').value.trim();
+            createLeadAndOpportunity({
+                company: document.getElementById('lead-company').value.trim(),
+                contact: document.getElementById('lead-contact').value.trim(),
+                email: document.getElementById('lead-email').value.trim(),
+                title,
+                value: Number(document.getElementById('lead-value').value),
+                campId: document.getElementById('lead-campaign').value,
+                nextAction: document.getElementById('lead-next-action').value.trim()
+            });
+
+            e.target.reset();
+            closeModal('modal-quick-lead');
+            saveState();
+            showToast(`Lead captured! "${title}" added to Motek Pipeline.`);
+        }
+
+        function handlePublicWebLead(e) {
+            e.preventDefault();
+            const company = document.getElementById('web-lead-company').value.trim();
+            const need = document.getElementById('web-lead-need').value.trim();
+            const defaultCamp = appState.campaigns[0]?.id || '';
+
+            createLeadAndOpportunity({
+                company,
+                contact: document.getElementById('web-lead-name').value.trim(),
+                email: document.getElementById('web-lead-email').value.trim(),
+                title: need,
+                value: Number(document.getElementById('web-lead-budget').value),
+                campId: defaultCamp,
+                nextAction: 'Respond to website inquiry within 2 hours'
+            });
+
+            e.target.reset();
+            closeModal('modal-public-lead-sim');
+            saveState();
+            switchTab('pipeline');
+            showToast(`Inbound website lead from ${company} added to New Lead!`);
+        }
+
+        function setPipelineView(view) {
+            appState.pipelineView = view;
+            const kanbanEl = document.getElementById('pipeline-kanban-container');
+            const listEl = document.getElementById('pipeline-list-container');
+            const btnK = document.getElementById('btn-view-kanban');
+            const btnL = document.getElementById('btn-view-list');
+
+            if (view === 'kanban') {
+                kanbanEl.classList.remove('hidden');
+                listEl.classList.add('hidden');
+                btnK.classList.add('bg-white', 'text-slate-900', 'shadow-sm');
+                btnK.classList.remove('text-slate-600');
+                btnL.classList.remove('bg-white', 'text-slate-900', 'shadow-sm');
+                btnL.classList.add('text-slate-600');
+            } else {
+                kanbanEl.classList.add('hidden');
+                listEl.classList.remove('hidden');
+                btnL.classList.add('bg-white', 'text-slate-900', 'shadow-sm');
+                btnL.classList.remove('text-slate-600');
+                btnK.classList.remove('bg-white', 'text-slate-900', 'shadow-sm');
+                btnK.classList.add('text-slate-600');
+            }
+        }
+
+        function renderPipeline() {
+            setPipelineView(appState.pipelineView || 'kanban');
+            const kanbanContainer = document.getElementById('pipeline-kanban-container');
+
+            kanbanContainer.innerHTML = PIPELINE_STAGES.map((stage, stageIdx) => {
+                const stageDeals = appState.deals.filter(d => d.stage === stage.id);
+                const stageTotal = stageDeals.reduce((sum, d) => sum + Number(d.value), 0);
+
+                const cardsHtml = stageDeals.map(deal => {
+                    const client = getClientById(deal.clientId);
+                    const isWon = deal.stage === 'Closed Won';
+                    const days = Number(deal.daysInStage || 0);
+                    const isStale = !isWon && days >= 7;
+
+                    return `
+                        <div draggable="true" ondragstart="onDealDragStart(event, '${deal.id}')"
+                            class="bg-white p-4 rounded-xl border ${isStale ? 'border-amber-300 ring-1 ring-amber-200/60' : 'border-slate-200/90'} shadow-2xs hover:shadow-md hover:border-red-300 transition-all cursor-grab active:cursor-grabbing space-y-2.5">
+                            <div class="flex items-start justify-between gap-2">
+                                <span class="text-[11px] font-semibold text-[#e51b24] bg-red-50 px-2 py-0.5 rounded-md truncate">${client.company}</span>
+                                <div class="flex items-center gap-1 shrink-0">
+                                    ${!isWon ? `<span class="text-[10px] font-semibold px-1.5 py-0.5 rounded ${isStale ? 'bg-amber-100 text-amber-800' : 'bg-slate-100 text-slate-500'}" title="Days in current stage">${days}d</span>` : ''}
+                                    <button onclick="openDealModal('${deal.id}')" class="text-slate-400 hover:text-[#e51b24] p-1" title="Edit Deal">
+                                        <i data-lucide="pencil" class="w-3.5 h-3.5"></i>
+                                    </button>
+                                    <button onclick="deleteDeal('${deal.id}')" class="text-slate-400 hover:text-rose-600 p-1" title="Delete Deal">
+                                        <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div>
+                                <h4 class="text-sm font-bold text-slate-900 leading-snug">${deal.title}</h4>
+                                <div class="flex items-center justify-between mt-1.5 tabular-nums">
+                                    <span class="text-sm font-bold text-slate-800">${formatMoney(deal.value)}</span>
+                                    <span class="text-xs font-medium text-slate-500">${deal.probability}% prob.</span>
+                                </div>
+                            </div>
+
+                            ${deal.nextAction ? `
+                                <div class="text-[11px] text-slate-500 bg-slate-50 px-2.5 py-1.5 rounded-lg flex items-center gap-1.5 truncate">
+                                    <i data-lucide="arrow-right-circle" class="w-3 h-3 text-[#e51b24] shrink-0"></i>
+                                    <span class="truncate">${deal.nextAction}</span>
+                                </div>
+                            ` : ''}
+
+                            ${isWon ? `
+                                <div class="pt-2 border-t border-slate-100">
+                                    ${deal.invoiced
+                                        ? `<span class="w-full inline-flex items-center justify-center gap-1.5 text-xs font-semibold text-emerald-700 bg-emerald-50 py-1.5 rounded-lg"><i data-lucide="check-circle" class="w-3.5 h-3.5"></i> Invoiced</span>`
+                                        : `<button onclick="convertDealToInvoice('${deal.id}')" class="w-full flex items-center justify-center gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold py-2 rounded-lg transition-colors shadow-2xs">
+                                            <i data-lucide="file-check" class="w-3.5 h-3.5"></i> Convert to Invoice
+                                           </button>`
+                                    }
+                                </div>
+                            ` : `
+                                <div class="pt-2 border-t border-slate-100 flex items-center justify-between">
+                                    <button ${stageIdx === 0 ? 'disabled' : ''} onclick="moveDealStage('${deal.id}', -1)"
+                                        class="text-xs text-slate-500 hover:text-slate-800 disabled:opacity-30 flex items-center gap-0.5 px-1.5 py-1 rounded hover:bg-slate-100">
+                                        <i data-lucide="chevron-left" class="w-3.5 h-3.5"></i> Prev
+                                    </button>
+                                    <button onclick="generateQuoteFromDeal('${deal.id}')" class="text-[11px] font-medium text-slate-500 hover:text-[#e51b24] px-1.5 py-1 rounded hover:bg-slate-100" title="Create Quote">
+                                        + Quote
+                                    </button>
+                                    <button onclick="moveDealStage('${deal.id}', 1)"
+                                        class="text-xs font-semibold text-[#e51b24] hover:text-[#cc151e] flex items-center gap-0.5 px-2 py-1 rounded hover:bg-red-50">
+                                        Advance <i data-lucide="chevron-right" class="w-3.5 h-3.5"></i>
+                                    </button>
+                                </div>
+                            `}
+                        </div>
+                    `;
+                }).join('');
+
+                return `
+                    <div ondragover="event.preventDefault()" ondrop="onDealDrop(event, '${stage.id}')"
+                        class="w-72 shrink-0 bg-slate-100/80 rounded-2xl p-3.5 border border-slate-200/70 flex flex-col gap-3 min-h-[500px]">
+                        <div class="flex items-center justify-between px-1">
+                            <div class="flex items-center gap-2">
+                                <span class="w-2.5 h-2.5 rounded-full ${stage.color}"></span>
+                                <h3 class="text-xs font-bold uppercase tracking-wider text-slate-700">${stage.id}</h3>
+                                <span class="text-xs font-bold bg-white text-slate-600 px-2 py-0.5 rounded-full shadow-2xs tabular-nums">${stageDeals.length}</span>
+                            </div>
+                        </div>
+                        <div class="px-1 text-xs font-semibold text-slate-500 tabular-nums">
+                            Stage Total: <span class="text-slate-900">${formatMoney(stageTotal)}</span>
+                        </div>
+                        <div class="space-y-3 flex-1">
+                            ${cardsHtml || `<div class="border-2 border-dashed border-slate-200 rounded-xl p-6 text-center text-xs text-slate-400">Drop deal here</div>`}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            const listBody = document.getElementById('pipeline-list-body');
+            listBody.innerHTML = appState.deals.map(deal => {
+                const client = getClientById(deal.clientId);
+                const weighted = Number(deal.value) * (Number(deal.probability) / 100);
+                const stageMeta = PIPELINE_STAGES.find(s => s.id === deal.stage) || PIPELINE_STAGES[0];
+
+                return `
+                    <tr class="hover:bg-slate-50/80">
+                        <td class="py-3.5 px-6">
+                            <div class="font-bold text-slate-900">${deal.title}</div>
+                            <div class="text-xs text-slate-500">${client.company}</div>
+                        </td>
+                        <td class="py-3.5 px-6">
+                            <span class="px-2.5 py-1 rounded-lg text-xs font-semibold ${stageMeta.badge}">${deal.stage}</span>
+                        </td>
+                        <td class="py-3.5 px-6 font-bold text-slate-800 tabular-nums">${formatMoney(deal.value)}</td>
+                        <td class="py-3.5 px-6 font-medium text-[#e51b24] tabular-nums">${formatMoney(weighted)} (${deal.probability}%)</td>
+                        <td class="py-3.5 px-6 text-xs text-slate-600">${deal.nextAction || '—'}</td>
+                        <td class="py-3.5 px-6 text-right space-x-1.5">
+                            ${deal.stage === 'Closed Won' && !deal.invoiced ? `
+                                <button onclick="convertDealToInvoice('${deal.id}')" class="text-xs bg-emerald-600 hover:bg-emerald-700 text-white font-semibold px-2.5 py-1.5 rounded-lg">
+                                    Create Invoice
+                                </button>
+                            ` : ''}
+                            <button onclick="openDealModal('${deal.id}')" class="text-slate-400 hover:text-[#e51b24] p-1"><i data-lucide="pencil" class="w-4 h-4"></i></button>
+                            <button onclick="deleteDeal('${deal.id}')" class="text-slate-400 hover:text-rose-600 p-1"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+
+            lucide.createIcons();
+        }
+
+        let draggedDealId = null;
+        function onDealDragStart(e, dealId) {
+            draggedDealId = dealId;
+            e.dataTransfer.effectAllowed = 'move';
+        }
+
+        function onDealDrop(e, targetStage) {
+            e.preventDefault();
+            if (!draggedDealId) return;
+            const deal = appState.deals.find(d => d.id === draggedDealId);
+            if (deal && deal.stage !== targetStage) {
+                deal.stage = targetStage;
+                deal.daysInStage = 0;
+                const stageObj = PIPELINE_STAGES.find(s => s.id === targetStage);
+                if (stageObj) deal.probability = stageObj.prob;
+                saveState();
+                showToast(`Moved "${deal.title}" to ${targetStage}`);
+            }
+            draggedDealId = null;
+        }
+
+        function moveDealStage(dealId, direction) {
+            const deal = appState.deals.find(d => d.id === dealId);
+            if (!deal) return;
+            const currentIdx = PIPELINE_STAGES.findIndex(s => s.id === deal.stage);
+            const nextIdx = currentIdx + direction;
+            if (nextIdx >= 0 && nextIdx < PIPELINE_STAGES.length) {
+                const nextStage = PIPELINE_STAGES[nextIdx];
+                deal.stage = nextStage.id;
+                deal.probability = nextStage.prob;
+                deal.daysInStage = 0;
+                saveState();
+                showToast(`Deal moved to ${deal.stage}`);
+            }
+        }
+
+        function openDealModal(dealId = null) {
+            populateSelectDropdowns();
+            const titleEl = document.getElementById('modal-deal-title');
+            if (dealId) {
+                const deal = appState.deals.find(d => d.id === dealId);
+                titleEl.textContent = 'Edit Opportunity';
+                document.getElementById('deal-id').value = deal.id;
+                document.getElementById('deal-title').value = deal.title;
+                document.getElementById('deal-client').value = deal.clientId;
+                document.getElementById('deal-campaign').value = deal.campaignId || '';
+                document.getElementById('deal-value').value = deal.value;
+                document.getElementById('deal-prob').value = deal.probability;
+                document.getElementById('deal-stage').value = deal.stage;
+                document.getElementById('deal-days').value = deal.daysInStage || 0;
+                document.getElementById('deal-next-action').value = deal.nextAction || '';
+            } else {
+                titleEl.textContent = 'New Sales Opportunity';
+                document.getElementById('deal-id').value = '';
+                document.getElementById('deal-title').value = '';
+                document.getElementById('deal-value').value = '';
+                document.getElementById('deal-prob').value = 35;
+                document.getElementById('deal-stage').value = 'New Lead';
+                document.getElementById('deal-days').value = 0;
+                document.getElementById('deal-next-action').value = '';
+            }
+            document.getElementById('modal-deal').classList.remove('hidden');
+        }
+
+        function handleSaveDeal(e) {
+            e.preventDefault();
+            const id = document.getElementById('deal-id').value;
+            const stage = document.getElementById('deal-stage').value;
+            const payload = {
+                title: document.getElementById('deal-title').value.trim(),
+                clientId: document.getElementById('deal-client').value,
+                campaignId: document.getElementById('deal-campaign').value,
+                value: Number(document.getElementById('deal-value').value),
+                probability: stage === 'Closed Won' ? 100 : Number(document.getElementById('deal-prob').value),
+                stage,
+                daysInStage: Number(document.getElementById('deal-days').value || 0),
+                nextAction: document.getElementById('deal-next-action').value.trim()
+            };
+
+            if (id) {
+                const idx = appState.deals.findIndex(d => d.id === id);
+                if (idx !== -1) appState.deals[idx] = { ...appState.deals[idx], ...payload };
+                showToast('Opportunity updated');
+            } else {
+                appState.deals.unshift({ id: 'deal-' + Date.now(), invoiced: false, ...payload });
+                showToast('New opportunity added to Motek pipeline');
+            }
+            closeModal('modal-deal');
+            saveState();
+        }
+
+        function deleteDeal(id) {
+            appState.deals = appState.deals.filter(d => d.id !== id);
+            saveState();
+            showToast('Opportunity removed', 'info');
+        }
+
+        function generateQuoteFromDeal(dealId) {
+            const deal = appState.deals.find(d => d.id === dealId);
+            if (!deal) return;
+
+            const today = new Date().toISOString().split('T')[0];
+            const validUntil = new Date(Date.now() + 14 * 86400000).toISOString().split('T')[0];
+            const nextNum = 101 + appState.invoices.length;
+
+            const newQuote = {
+                id: `MTK-Q-${nextNum}`,
+                clientId: deal.clientId,
+                date: today,
+                dueDate: validUntil,
+                currency: appState.currency || 'ZAR',
+                taxRate: 15,
+                status: 'Quote',
+                items: [
+                    { desc: deal.title, qty: 1, price: Number(deal.value) }
+                ]
+            };
+
+            appState.invoices.unshift(newQuote);
+            if (deal.stage === 'New Lead' || deal.stage === 'Qualified') {
+                deal.stage = 'Proposal Sent';
+                deal.probability = 60;
+                deal.daysInStage = 0;
+            }
+
+            saveState();
+            switchTab('invoicing');
+            showToast(`Motek Quote ${newQuote.id} generated & deal moved to Proposal Sent!`);
+        }
+
+        function convertDealToInvoice(dealId) {
+            const deal = appState.deals.find(d => d.id === dealId);
+            if (!deal) return;
+
+            const today = new Date().toISOString().split('T')[0];
+            const due = new Date(Date.now() + 30 * 86400000).toISOString().split('T')[0];
+            const nextNum = 101 + appState.invoices.length;
+
+            const newInv = {
+                id: `MTK-2026-${nextNum}`,
+                clientId: deal.clientId,
+                date: today,
+                dueDate: due,
+                currency: appState.currency || 'ZAR',
+                taxRate: 15,
+                status: 'Sent',
+                items: [
+                    { desc: deal.title, qty: 1, price: Number(deal.value) }
+                ]
+            };
+
+            appState.invoices.unshift(newInv);
+            deal.invoiced = true;
+
+            appState.activities.unshift({
+                id: 'act-' + Date.now(),
+                clientId: deal.clientId,
+                type: 'Note',
+                date: today,
+                note: `Converted Closed Won deal "${deal.title}" into Motek Invoice ${newInv.id}.`
+            });
+
+            saveState();
+            switchTab('invoicing');
+            showToast(`Motek Invoice ${newInv.id} created from won deal!`);
+        }
+
+        function filterInvoices(status) {
+            appState.invoiceFilter = status;
+            document.querySelectorAll('.inv-filter-btn').forEach(btn => {
+                if (btn.textContent.trim() === status) {
+                    btn.classList.remove('bg-slate-100', 'text-slate-600');
+                    btn.classList.add('bg-[#e51b24]', 'text-white');
+                } else {
+                    btn.classList.add('bg-slate-100', 'text-slate-600');
+                    btn.classList.remove('bg-[#e51b24]', 'text-white');
+                }
+            });
+            renderInvoices();
+        }
+
+        function renderInvoices() {
+            const filter = appState.invoiceFilter || 'All';
+            const filtered = filter === 'All'
+                ? appState.invoices
+                : appState.invoices.filter(i => i.status === filter);
+
+            const statusColors = {
+                Quote: 'bg-purple-50 text-purple-700 border-purple-200',
+                Draft: 'bg-slate-100 text-slate-700 border-slate-200',
+                Sent: 'bg-blue-50 text-blue-700 border-blue-200',
+                Paid: 'bg-emerald-50 text-emerald-700 border-emerald-200',
+                Overdue: 'bg-rose-50 text-rose-700 border-rose-200'
+            };
+
+            const tbody = document.getElementById('invoices-table-body');
+            if (filtered.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="7" class="py-10 text-center text-sm text-slate-400">No documents match the "${filter}" filter.</td></tr>`;
+                return;
+            }
+
+            tbody.innerHTML = filtered.map(inv => {
+                const client = getClientById(inv.clientId);
+                const { total } = calcInvoiceTotals(inv);
+
+                return `
+                    <tr class="hover:bg-slate-50/80 transition-colors">
+                        <td class="py-3.5 px-6 font-bold text-[#e51b24]">
+                            <button onclick="previewInvoice('${inv.id}')" class="hover:underline">${inv.id}</button>
+                        </td>
+                        <td class="py-3.5 px-6">
+                            <div class="font-semibold text-slate-900">${client.company}</div>
+                            <div class="text-xs text-slate-500">${client.contact}</div>
+                        </td>
+                        <td class="py-3.5 px-6 text-slate-600">${inv.date}</td>
+                        <td class="py-3.5 px-6 text-slate-600">${inv.dueDate}</td>
+                        <td class="py-3.5 px-6 font-bold text-slate-900 tabular-nums">${formatMoneyExact(total, inv.currency)}</td>
+                        <td class="py-3.5 px-6">
+                            <span class="px-2.5 py-1 rounded-full text-xs font-semibold border ${statusColors[inv.status] || statusColors.Draft}">${inv.status}</span>
+                        </td>
+                        <td class="py-3.5 px-6 text-right">
+                            <div class="inline-flex items-center gap-1.5">
+                                ${inv.status === 'Quote' ? `
+                                    <button onclick="convertQuoteToInvoice('${inv.id}')" class="text-xs bg-red-50 hover:bg-[#e51b24] text-[#e51b24] hover:text-white border border-red-200 font-semibold px-2.5 py-1 rounded-lg transition-colors">
+                                        Convert to Invoice
+                                    </button>
+                                ` : inv.status !== 'Paid' ? `
+                                    <button onclick="markInvoicePaid('${inv.id}')" class="text-xs bg-emerald-50 hover:bg-emerald-600 text-emerald-700 hover:text-white border border-emerald-200 font-semibold px-2.5 py-1 rounded-lg transition-colors">
+                                        Mark Paid
+                                    </button>
+                                ` : ''}
+                                <button onclick="previewInvoice('${inv.id}')" class="p-1.5 text-slate-500 hover:text-[#e51b24] rounded-lg hover:bg-red-50" title="Preview & Print">
+                                    <i data-lucide="eye" class="w-4 h-4"></i>
+                                </button>
+                                <button onclick="deleteInvoice('${inv.id}')" class="p-1.5 text-slate-400 hover:text-rose-600 rounded-lg hover:bg-rose-50" title="Delete">
+                                    <i data-lucide="trash-2" class="w-4 h-4"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+            lucide.createIcons();
+        }
+
+        function convertQuoteToInvoice(quoteId) {
+            const doc = appState.invoices.find(i => i.id === quoteId);
+            if (!doc) return;
+            doc.status = 'Sent';
+            doc.id = doc.id.replace('MTK-Q-', 'MTK-2026-');
+            doc.date = new Date().toISOString().split('T')[0];
+            doc.dueDate = new Date(Date.now() + 30 * 86400000).toISOString().split('T')[0];
+            saveState();
+            showToast(`Quote accepted and converted to Invoice ${doc.id}!`);
+        }
+
+        function markInvoicePaid(invId) {
+            const inv = appState.invoices.find(i => i.id === invId);
+            if (!inv) return;
+            inv.status = 'Paid';
+            const { total } = calcInvoiceTotals(inv);
+
+            appState.activities.unshift({
+                id: 'act-' + Date.now(),
+                clientId: inv.clientId,
+                type: 'Note',
+                date: new Date().toISOString().split('T')[0],
+                note: `Payment settled for ${inv.id} (${formatMoneyExact(total, inv.currency)}).`
+            });
+
+            saveState();
+            showToast(`Invoice ${inv.id} marked as Paid!`);
+        }
+
+        function deleteInvoice(invId) {
+            appState.invoices = appState.invoices.filter(i => i.id !== invId);
+            saveState();
+            showToast('Document deleted', 'info');
+        }
+
+        function openInvoiceBuilder(defaultStatus = 'Sent') {
+            populateSelectDropdowns();
+            const today = new Date().toISOString().split('T')[0];
+            const due = new Date(Date.now() + 30 * 86400000).toISOString().split('T')[0];
+
+            document.getElementById('inv-currency').value = appState.currency || 'ZAR';
+            document.getElementById('inv-status').value = defaultStatus;
+            document.getElementById('inv-date').value = today;
+            document.getElementById('inv-due-date').value = due;
+            document.getElementById('inv-tax-rate').value = 15;
+
+            const container = document.getElementById('invoice-line-items-container');
+            container.innerHTML = '';
+            addInvoiceLineItemRow('Motek Consulting & Implementation Services', 1, 18500);
+            recalculateInvoiceTotal();
+
+            document.getElementById('modal-invoice-builder').classList.remove('hidden');
+        }
+
+        function addInvoiceLineItemRow(desc = '', qty = 1, price = 0) {
+            const container = document.getElementById('invoice-line-items-container');
+            const row = document.createElement('div');
+            row.className = 'grid grid-cols-12 gap-2 items-center inv-line-row';
+            row.innerHTML = `
+                <input type="text" placeholder="Item / Service description" value="${desc}" required
+                    class="col-span-6 text-xs sm:text-sm border border-slate-300 rounded-lg px-2.5 py-1.5 bg-white inv-item-desc">
+                <input type="number" placeholder="Qty" value="${qty}" min="1" step="1" required oninput="recalculateInvoiceTotal()"
+                    class="col-span-2 text-xs sm:text-sm border border-slate-300 rounded-lg px-2 py-1.5 bg-white inv-item-qty">
+                <input type="number" placeholder="Price" value="${price}" min="0" step="0.01" required oninput="recalculateInvoiceTotal()"
+                    class="col-span-3 text-xs sm:text-sm border border-slate-300 rounded-lg px-2.5 py-1.5 bg-white inv-item-price">
+                <button type="button" onclick="this.parentElement.remove(); recalculateInvoiceTotal();" class="col-span-1 text-slate-400 hover:text-rose-600 flex justify-center">
+                    <i data-lucide="x" class="w-4 h-4"></i>
+                </button>
+            `;
+            container.appendChild(row);
+            lucide.createIcons();
+            recalculateInvoiceTotal();
+        }
+
+        function recalculateInvoiceTotal() {
+            const curr = document.getElementById('inv-currency').value;
+            const taxRate = Number(document.getElementById('inv-tax-rate').value || 0);
+            let subtotal = 0;
+
+            document.querySelectorAll('.inv-line-row').forEach(row => {
+                const qty = Number(row.querySelector('.inv-item-qty').value || 0);
+                const price = Number(row.querySelector('.inv-item-price').value || 0);
+                subtotal += qty * price;
+            });
+
+            const tax = subtotal * (taxRate / 100);
+            const total = subtotal + tax;
+
+            document.getElementById('inv-preview-tax-label').textContent = taxRate;
+            document.getElementById('inv-preview-subtotal').textContent = formatMoneyExact(subtotal, curr);
+            document.getElementById('inv-preview-tax').textContent = formatMoneyExact(tax, curr);
+            document.getElementById('inv-preview-total').textContent = formatMoneyExact(total, curr);
+        }
+
+        function handleSaveInvoice(e) {
+            e.preventDefault();
+            const items = [];
+            document.querySelectorAll('.inv-line-row').forEach(row => {
+                const desc = row.querySelector('.inv-item-desc').value.trim();
+                const qty = Number(row.querySelector('.inv-item-qty').value);
+                const price = Number(row.querySelector('.inv-item-price').value);
+                if (desc) items.push({ desc, qty, price });
+            });
+
+            if (items.length === 0) return;
+
+            const status = document.getElementById('inv-status').value;
+            const prefix = status === 'Quote' ? 'MTK-Q-' : 'MTK-2026-';
+            const nextNum = 101 + appState.invoices.length;
+
+            const newInv = {
+                id: `${prefix}${nextNum}`,
+                clientId: document.getElementById('inv-client').value,
+                date: document.getElementById('inv-date').value,
+                dueDate: document.getElementById('inv-due-date').value,
+                currency: document.getElementById('inv-currency').value,
+                taxRate: Number(document.getElementById('inv-tax-rate').value || 0),
+                status,
+                items
+            };
+
+            appState.invoices.unshift(newInv);
+            closeModal('modal-invoice-builder');
+            saveState();
+            showToast(`Motek document ${newInv.id} created!`);
+        }
+
+        function previewInvoice(invId) {
+            const inv = appState.invoices.find(i => i.id === invId);
+            if (!inv) return;
+            const client = getClientById(inv.clientId);
+            const { subtotal, tax, total } = calcInvoiceTotals(inv);
+            const profile = appState.companyProfile || defaultState.companyProfile;
+            const docTitle = inv.status === 'Quote' ? 'Official Quotation' : 'Tax Invoice';
+
+            const area = document.getElementById('printable-invoice-area');
+            area.innerHTML = `
+                <div class="flex justify-between items-start border-b border-slate-200 pb-6">
+                    <div class="flex items-center gap-3.5">
+                        <div class="w-12 h-12 rounded-full bg-white p-0.5 flex items-center justify-center shadow-md overflow-hidden shrink-0 border border-red-500/30">
+                            <img src="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQEASABIAAD/4QBaRXhpZgAATU0AKgAAAAgABAEaAAUAAAABAAAAPgEbAAUAAAABAAAARgEoAAMAAAABAAIAAIdpAAQAAAABAAAATgAAAAAAAA==..." alt="Motek Logo" class="w-full h-full object-cover rounded-full">
+                        </div>
+                        <div>
+                            <span class="text-slate-900 font-extrabold text-xl tracking-tight">${profile.name}</span>
+                            <p class="text-xs text-slate-500 mt-1">${profile.address}</p>
+                            <p class="text-xs text-slate-500">VAT Reg: ${profile.vat || 'N/A'} | ${profile.email}</p>
+                        </div>
+                    </div>
+                    <div class="text-right">
+                        <h2 class="text-2xl font-extrabold text-slate-900 uppercase tracking-tight">${docTitle}</h2>
+                        <p class="text-sm font-bold text-[#e51b24] mt-1">${inv.id}</p>
+                        <span class="inline-block mt-1 px-2.5 py-0.5 rounded text-xs font-bold uppercase bg-slate-100 text-slate-700">${inv.status}</span>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-6 py-2">
+                    <div>
+                        <p class="text-xs font-bold uppercase tracking-wider text-slate-400 mb-1">Prepared For</p>
+                        <p class="font-bold text-slate-900 text-base">${client.company}</p>
+                        <p class="text-sm text-slate-600">Attn: ${client.contact}</p>
+                        <p class="text-sm text-slate-600">${client.email}</p>
+                    </div>
+                    <div class="text-right space-y-1 text-sm tabular-nums">
+                        <div><span class="text-slate-500">Issue Date:</span> <span class="font-semibold text-slate-900">${inv.date}</span></div>
+                        <div><span class="text-slate-500">${inv.status === 'Quote' ? 'Valid Until:' : 'Due Date:'}</span> <span class="font-semibold text-slate-900">${inv.dueDate}</span></div>
+                        <div><span class="text-slate-500">Currency:</span> <span class="font-semibold text-slate-900">${inv.currency}</span></div>
+                    </div>
+                </div>
+
+                <table class="w-full text-left border-collapse mt-4">
+                    <thead>
+                        <tr class="bg-slate-100 text-slate-600 text-xs uppercase">
+                            <th class="py-2.5 px-4 rounded-l-lg">Description</th>
+                            <th class="py-2.5 px-4 text-right">Qty</th>
+                            <th class="py-2.5 px-4 text-right">Unit Price</th>
+                            <th class="py-2.5 px-4 text-right rounded-r-lg">Line Total</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-100 text-sm tabular-nums">
+                        ${inv.items.map(item => `
+                            <tr>
+                                <td class="py-3 px-4 font-medium text-slate-800">${item.desc}</td>
+                                <td class="py-3 px-4 text-right text-slate-600">${item.qty}</td>
+                                <td class="py-3 px-4 text-right text-slate-600">${formatMoneyExact(item.price, inv.currency)}</td>
+                                <td class="py-3 px-4 text-right font-semibold text-slate-900">${formatMoneyExact(item.qty * item.price, inv.currency)}</td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+
+                <div class="flex justify-end pt-4 border-t border-slate-200 tabular-nums">
+                    <div class="w-64 space-y-2 text-sm">
+                        <div class="flex justify-between text-slate-600">
+                            <span>Subtotal</span>
+                            <span>${formatMoneyExact(subtotal, inv.currency)}</span>
+                        </div>
+                        <div class="flex justify-between text-slate-600">
+                            <span>VAT / Tax (${inv.taxRate}%)</span>
+                            <span>${formatMoneyExact(tax, inv.currency)}</span>
+                        </div>
+                        <div class="flex justify-between text-base font-bold text-slate-900 pt-2 border-t border-slate-200">
+                            <span>Total Amount</span>
+                            <span class="text-[#e51b24]">${formatMoneyExact(total, inv.currency)}</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-slate-50 p-4 rounded-xl text-xs text-slate-600 mt-6 border border-slate-200/70">
+                    <p class="font-bold text-slate-800 mb-1">Motek Banking & EFT Payment Details</p>
+                    <p>${profile.bank}</p>
+                    <p class="mt-1 text-slate-500">Please quote reference <strong>${inv.id}</strong> on all EFT transfers. Thank you for partnering with Motek.</p>
+                </div>
+            `;
+
+            document.getElementById('modal-invoice-preview').classList.remove('hidden');
+            lucide.createIcons();
+        }
+
+        function renderClients() {
+            const query = (document.getElementById('client-search-input')?.value || '').toLowerCase();
+            const filteredClients = appState.clients.filter(c =>
+                c.company.toLowerCase().includes(query) ||
+                c.contact.toLowerCase().includes(query) ||
+                c.email.toLowerCase().includes(query) ||
+                (c.industry || '').toLowerCase().includes(query)
+            );
+
+            const grid = document.getElementById('clients-grid');
+            grid.innerHTML = filteredClients.map(client => {
+                const paidInvSum = appState.invoices
+                    .filter(i => i.clientId === client.id && i.status === 'Paid')
+                    .reduce((s, i) => s + calcInvoiceTotals(i).total, 0);
+
+                const activeDealsCount = appState.deals.filter(d => d.clientId === client.id && d.stage !== 'Closed Won').length;
+
+                return `
+                    <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm hover:border-red-300 transition-all flex flex-col justify-between space-y-4">
+                        <div>
+                            <div class="flex items-start justify-between gap-2">
+                                <span class="text-[11px] font-semibold px-2.5 py-0.5 rounded-full bg-slate-100 text-slate-600">${client.industry || 'Client'}</span>
+                                <span class="text-xs font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-lg tabular-nums">LTV: ${formatMoney(paidInvSum)}</span>
+                            </div>
+                            <h4 class="text-base font-bold text-slate-900 mt-2">${client.company}</h4>
+                            <p class="text-xs font-medium text-slate-600 mt-0.5">${client.contact}</p>
+                            <div class="mt-3 space-y-1 text-xs text-slate-500">
+                                <div class="flex items-center gap-2"><i data-lucide="mail" class="w-3.5 h-3.5 text-slate-400"></i> ${client.email}</div>
+                                <div class="flex items-center gap-2"><i data-lucide="phone" class="w-3.5 h-3.5 text-slate-400"></i> ${client.phone || 'N/A'}</div>
+                            </div>
+                        </div>
+                        <div class="pt-3 border-t border-slate-100 flex items-center justify-between text-xs">
+                            <span class="text-slate-500"><strong class="text-slate-800">${activeDealsCount}</strong> active deal${activeDealsCount === 1 ? '' : 's'}</span>
+                            <button onclick="quickSelectClientForActivity('${client.id}')" class="font-semibold text-[#e51b24] hover:underline">
+                                + Log Touchpoint
+                            </button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            const expenses = appState.expenses || [];
+            const totalExp = expenses.reduce((s, e) => s + Number(e.amount), 0);
+            document.getElementById('total-expenses-badge').textContent = formatMoney(totalExp);
+
+            const expBody = document.getElementById('expenses-table-body');
+            expBody.innerHTML = expenses.map(exp => `
+                <tr class="hover:bg-slate-50/80">
+                    <td class="py-2.5 px-4 font-medium text-slate-800">${exp.desc}</td>
+                    <td class="py-2.5 px-4"><span class="text-xs bg-slate-100 text-slate-600 px-2 py-0.5 rounded">${exp.category}</span></td>
+                    <td class="py-2.5 px-4 text-xs text-slate-400">${exp.date}</td>
+                    <td class="py-2.5 px-4 font-bold text-rose-600 text-right tabular-nums">${formatMoney(exp.amount)}</td>
+                    <td class="py-2.5 px-4 text-right">
+                        <button onclick="deleteExpense('${exp.id}')" class="text-slate-300 hover:text-rose-600"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i></button>
+                    </td>
+                </tr>
+            `).join('');
+
+            const timelineEl = document.getElementById('client-activity-timeline');
+            timelineEl.innerHTML = appState.activities.map(act => {
+                const client = getClientById(act.clientId);
+                return `
+                    <div class="relative pl-5 border-l-2 border-red-200 pb-1">
+                        <span class="w-2.5 h-2.5 rounded-full bg-[#e51b24] absolute -left-[6px] top-1"></span>
+                        <div class="flex items-center justify-between text-xs">
+                            <span class="font-bold text-slate-900">${client.company}</span>
+                            <span class="text-slate-400">${act.date}</span>
+                        </div>
+                        <span class="inline-block text-[10px] font-semibold uppercase tracking-wider text-[#e51b24] bg-red-50 px-1.5 py-0.5 rounded mt-1">${act.type}</span>
+                        <p class="text-xs text-slate-600 mt-1 leading-relaxed">${act.note}</p>
+                    </div>
+                `;
+            }).join('');
+
+            populateSelectDropdowns();
+            lucide.createIcons();
+        }
+
+        function handleAddExpense(e) {
+            e.preventDefault();
+            const desc = document.getElementById('exp-desc').value.trim();
+            const cat = document.getElementById('exp-cat').value;
+            const amount = Number(document.getElementById('exp-amount').value);
+            if (!desc || amount <= 0) return;
+
+            if (!appState.expenses) appState.expenses = [];
+            appState.expenses.unshift({
+                id: 'exp-' + Date.now(),
+                desc,
+                category: cat,
+                amount,
+                date: new Date().toISOString().split('T')[0]
+            });
+
+            e.target.reset();
+            saveState();
+            showToast('Operating expense recorded');
+        }
+
+        function deleteExpense(id) {
+            appState.expenses = (appState.expenses || []).filter(e => e.id !== id);
+            saveState();
+            showToast('Expense removed', 'info');
+        }
+
+        function quickSelectClientForActivity(clientId) {
+            document.getElementById('activity-client-select').value = clientId;
+            document.getElementById('activity-note-input').focus();
+        }
+
+        function handleAddClient(e) {
+            e.preventDefault();
+            const newClient = {
+                id: 'cli-' + Date.now(),
+                company: document.getElementById('client-company').value.trim(),
+                contact: document.getElementById('client-contact').value.trim(),
+                phone: document.getElementById('client-phone').value.trim(),
+                email: document.getElementById('client-email').value.trim(),
+                industry: document.getElementById('client-industry').value.trim() || 'General'
+            };
+            appState.clients.unshift(newClient);
+            e.target.reset();
+            closeModal('modal-add-client');
+            saveState();
+            showToast(`Client "${newClient.company}" added to Motek directory`);
+        }
+
+        function logClientActivity(e) {
+            e.preventDefault();
+            const clientId = document.getElementById('activity-client-select').value;
+            const type = document.getElementById('activity-type-select').value;
+            const date = document.getElementById('activity-date-input').value;
+            const note = document.getElementById('activity-note-input').value.trim();
+
+            if (!clientId || !note) return;
+
+            appState.activities.unshift({
+                id: 'act-' + Date.now(),
+                clientId,
+                type,
+                date,
+                note
+            });
+
+            document.getElementById('activity-note-input').value = '';
+            saveState();
+            showToast('Interaction logged to client timeline');
+        }
+
+        function refreshAllViews() {
+            document.getElementById('global-currency').value = appState.currency || 'ZAR';
+            renderDashboard();
+            renderMarketing();
+            renderPipeline();
+            renderInvoices();
+            renderClients();
+        }
+
+        window.onload = function() {
+            const today = new Date().toISOString().split('T')[0];
+            const actDate = document.getElementById('activity-date-input');
+            if (actDate) actDate.value = today;
+
+            refreshAllViews();
+            lucide.createIcons();
+        };
+    </script>
+</body>
+</html>
